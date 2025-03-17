@@ -1329,13 +1329,11 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                 final wineName = arguments['wine_name'];
                 final winery = arguments['winery'] ?? '';
                 final year = arguments['year'] ?? '';
-
                 print("Searching for reviews for $wineName ($winery, $year)");
 
-                // Use real API call to fetch reviews
-                final reviews = await _fetchWineReviews(wineName, winery, year);
+                final reviews =
+                    await _openAiWineReviews(wineName, winery, year);
 
-                // Find the wine in wineData and add the reviews
                 bool foundMatch = false;
                 for (var wine in wineData) {
                   if (_isWineMatch(wine, wineName, winery, year)) {
@@ -1344,7 +1342,6 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                     print("Added reviews to wine: " + wine['name']);
                   }
                 }
-
                 if (!foundMatch && wineData.isNotEmpty) {
                   print(
                       "No matching wine found for reviews, adding to first wine");
@@ -1357,10 +1354,9 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                 final wineName = arguments['wine_name'];
                 final winery = arguments['winery'] ?? '';
                 final year = arguments['year'] ?? '';
-
                 print("Searching for image for $wineName ($winery, $year)");
 
-                final imageUrl = await _fetchWineImage(wineName, winery, year);
+                final imageUrl = await _openAiWineImage(wineName, winery, year);
 
                 bool foundMatch = false;
                 for (var wine in wineData) {
@@ -2376,55 +2372,76 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
 
   // Real API methods for fetching wine reviews and images
 
-  Future<List<String>> _fetchWineReviews(
+  Future<List<String>> _openAiWineReviews(
       String wineName, String winery, String year) async {
-    final queryParameters = {
-      'wine_name': wineName,
-      'winery': winery,
-      'year': year,
-    };
-    final uri = Uri.https('api.example.com', '/wine_reviews', queryParameters);
     try {
-      final response = await http.get(uri);
+      // Build the search query for wine reviews
+      final query =
+          Uri.encodeComponent("$wineName $winery $year wine reviews ratings");
+      final apiKey =
+          'AIzaSyDgx_HtOhwGGm6Xc8FwFpCb0cLIBnhiYzw'; // Replace with your Google API key
+      final searchEngineId =
+          '012345678901234567890:abcdefghijk'; // Replace with your search engine ID
+
+      final response = await http.get(
+        Uri.parse(
+            'https://www.googleapis.com/customsearch/v1?key=$apiKey&cx=$searchEngineId&q=$query'),
+      );
+
       if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['reviews'] != null && jsonData['reviews'] is List) {
-          return List<String>.from(jsonData['reviews']);
+        final data = jsonDecode(response.body);
+        final items = data['items'];
+        if (items != null && items is List && items.isNotEmpty) {
+          List<String> reviews = [];
+          // Process the top 5 search results or fewer if less are available
+          for (int i = 0; i < math.min(5, items.length); i++) {
+            final item = items[i];
+            final title = item['title'] ?? '';
+            final snippet = item['snippet'] ?? '';
+
+            // Format as a review with source
+            final source = title.contains('-')
+                ? title.split('-').first.trim()
+                : 'Wine Review';
+            reviews.add('$source: $snippet');
+          }
+          return reviews;
         }
-      } else {
-        print(
-            'Fetch wine reviews API error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error fetching wine reviews: $e');
+      print("Error in Google Search for wine reviews: $e");
     }
-    // Fallback to simulated reviews
+    // Fallback to simulated reviews if OpenAI call fails
     return _simulateWineReviewSearch(wineName, winery, year);
   }
 
-  Future<String> _fetchWineImage(
+  Future<String> _openAiWineImage(
       String wineName, String winery, String year) async {
-    final queryParameters = {
-      'wine_name': wineName,
-      'winery': winery,
-      'year': year,
-    };
-    final uri = Uri.https('api.example.com', '/wine_image', queryParameters);
     try {
-      final response = await http.get(uri);
+      // Build the search query for wine bottle images
+      final query = Uri.encodeComponent("$wineName $winery $year wine bottle");
+      final apiKey =
+          'AIzaSyDgx_HtOhwGGm6Xc8FwFpCb0cLIBnhiYzw'; // Replace with your Google API key
+      final searchEngineId =
+          '012345678901234567890:abcdefghijk'; // Replace with your search engine ID
+
+      final response = await http.get(
+        Uri.parse(
+            'https://www.googleapis.com/customsearch/v1?key=$apiKey&cx=$searchEngineId&searchType=image&q=$query'),
+      );
+
       if (response.statusCode == 200) {
-        final jsonData = jsonDecode(response.body);
-        if (jsonData['image_url'] != null) {
-          return jsonData['image_url'];
+        final data = jsonDecode(response.body);
+        final items = data['items'];
+        if (items != null && items is List && items.isNotEmpty) {
+          // Get the first image URL
+          return items[0]['link'];
         }
-      } else {
-        print(
-            'Fetch wine image API error: ${response.statusCode} - ${response.body}');
       }
     } catch (e) {
-      print('Error fetching wine image: $e');
+      print("Error in Google Search for wine image: $e");
     }
-    // Fallback to simulated image search
+    // Fallback to simulated image search if OpenAI call fails
     return _simulateWineImageSearch(wineName, winery, year);
   }
 }
