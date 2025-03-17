@@ -1,11 +1,11 @@
 {
-    "name": "wine_app",
-    "short_name": "wine_app",
+    "name": "Pick My Wine",
+    "short_name": "Pick My Wine",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#3333CC",
+    "theme_color": "#3333CC",
+    "description": "An elegant wine selection app to help you find the perfect wine for any occasion.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
@@ -30,6 +30,20 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Scan Wine",
+            "short_name": "Scan",
+            "description": "Scan a wine label or menu",
+            "url": "/?action=scan",
+            "icons": [
+                {
+                    "src": "icons/Icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
         }
     ]
 }
