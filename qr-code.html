@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QR Code Generator for Pick My Wine</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-color: #3333CC;
+            color: white;
+            min-height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        #qrcode {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .url-display {
+            font-size: 18px;
+            margin-bottom: 20px;
+            word-break: break-all;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 100%;
+        }
+        button {
+            background-color: #00CCFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Scan to open Pick My Wine</h1>
+    <div id="qrcode"></div>
+    <div class="url-display" id="urlDisplay"></div>
+    <button id="copyButton">Copy URL</button>
+    <div id="status" class="status"></div>
+
+    <!-- QR Code Library - Using a different CDN -->
+    <script src="https://unpkg.com/qrcode@1.5.1/build/qrcode.js"></script>
+    
+    <script>
+        const statusDiv = document.getElementById('status');
+        const qrcodeDiv = document.getElementById('qrcode');
+        const urlDisplay = document.getElementById('urlDisplay');
+        const copyButton = document.getElementById('copyButton');
+        
+        // Get the local IP directly from window.location
+        function getLocalIpAndCreateQR() {
+            statusDiv.textContent = "Generating QR code...";
+            
+            try {
+                // Get the hostname directly from the page URL or fall back to the local IP
+                let hostname = window.location.hostname;
+                if (hostname === 'localhost' || hostname === '127.0.0.1') {
+                    hostname = '192.168.0.13';  // Hardcoded fallback if needed
+                }
+                
+                // Create the URL for the web app
+                const port = "8000";
+                const appURL = `http://${hostname}:${port}`;
+                
+                // Display the URL
+                urlDisplay.textContent = appURL;
+                
+                // Clear previous QR code
+                qrcodeDiv.innerHTML = '';
+                
+                // Generate QR code
+                // Use a simpler method with direct DOM manipulation
+                QRCode.toDataURL(appURL, { 
+                    width: 250,
+                    color: {
+                        dark: '#3333CC',
+                        light: '#FFFFFF'
+                    }
+                }, function(error, url) {
+                    if (error) {
+                        console.error('Error generating QR code:', error);
+                        statusDiv.textContent = "Error generating QR code: " + error;
+                        statusDiv.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+                    } else {
+                        // Create image element
+                        const img = document.createElement('img');
+                        img.src = url;
+                        img.alt = "QR Code";
+                        img.style.maxWidth = "100%";
+                        
+                        // Add to DOM
+                        qrcodeDiv.appendChild(img);
+                        
+                        statusDiv.textContent = "QR code generated successfully!";
+                        statusDiv.style.backgroundColor = "rgba(0, 255, 0, 0.2)";
+                    }
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.textContent = "Error: " + error.message;
+                statusDiv.style.backgroundColor = "rgba(255, 0, 0, 0.2)";
+            }
+        }
+        
+        // Handle URL copying
+        copyButton.addEventListener('click', function() {
+            const urlText = urlDisplay.textContent;
+            
+            // Use clipboard API if available
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(urlText)
+                    .then(() => {
+                        alert('URL copied to clipboard!');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        alert('Failed to copy URL: ' + err);
+                    });
+            } else {
+                // Fallback for browsers that don't support clipboard API
+                const textArea = document.createElement('textarea');
+                textArea.value = urlText;
+                textArea.style.position = 'fixed';  // Avoid scrolling to bottom
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    const msg = successful ? 'URL copied to clipboard!' : 'Unable to copy';
+                    alert(msg);
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy URL: ' + err);
+                }
+                
+                document.body.removeChild(textArea);
+            }
+        });
+        
+        // Generate QR code when page loads
+        window.onload = getLocalIpAndCreateQR;
+    </script>
+</body>
+</html> 

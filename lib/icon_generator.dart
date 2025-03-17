@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 // This is a utility class to generate app icons during development
 // It creates a wine glass icon with a gradient background

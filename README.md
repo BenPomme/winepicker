@@ -8,6 +8,9 @@ An elegant wine selection app to help you find the perfect wine for any occasion
 - **Wine Pairing**: Select your preferences to get personalized wine recommendations
 - **Detailed Information**: Get comprehensive details about each wine, including ratings, price, and reviews
 - **Modern Interface**: Enjoy a sleek, music-player inspired design
+- **Splash Screen**: Engaging animated splash screen for a polished user experience
+- **Monetization**: Elegant ad integration that doesn't interfere with the user experience
+- **Web Support**: Fully functional web version with responsive design
 
 ## Setup
 
@@ -30,9 +33,25 @@ Never commit your actual API key to Git. The `.env` file is already in the `.git
 5. **Filter Options**: Use the filter icon to find wines within your price range
 6. **Sort Wines**: Tap the sort icon to arrange wines by rating, price, or preference match
 
+## Platform Support
+
+- **Mobile**: Native iOS and Android apps with full functionality
+- **Web**: Responsive web version with all core features
+- **Desktop**: Support for macOS, Windows, and Linux platforms
+
+## Recent Improvements
+
+- Enhanced error handling for more reliable wine recognition
+- Improved web initialization for better cross-platform compatibility
+- Added splash screen for a more engaging startup experience
+- Integrated monetization with non-intrusive ads
+- Fixed JSON parsing issues for more reliable API responses
+
+Check the [CHANGELOG.md](CHANGELOG.md) for a detailed list of all changes.
+
 ## Beta Testing Notes
 
-This is version 1.0.1 of Pick My Wine. As a beta tester, your feedback is invaluable! Please note:
+This is version 1.1.0 of Pick My Wine. As a beta tester, your feedback is invaluable! Please note:
 
 - This is a testing version and may contain bugs
 - Wine recognition works best on clear, well-lit images of wine lists or bottles

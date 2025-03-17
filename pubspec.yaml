@@ -35,6 +35,8 @@ dependencies:
   http: ^1.1.0  # For API calls
   share_plus: ^10.1.4
   flutter_launcher_icons: ^0.14.3
+  flutter_dotenv: ^5.1.0  # For loading environment variables
+  google_mobile_ads: ^4.0.0  # For monetization with ads
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +53,7 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/app_icon.png
+    - .env
   #   - images/a_dot_ham.jpeg
 
 # Flutter launcher icons configuration

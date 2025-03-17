@@ -151,21 +151,36 @@
   <script src="flutter.js" defer></script>
   <script>
     window.addEventListener('load', function(ev) {
-      // Detect mobile devices
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      // Set renderer options based on device
-      const rendererOptions = {
-        renderer: isMobile ? 'html' : 'canvaskit'
+      // Download main.dart.js
+      _flutter = {
+        loader: {
+          file: "main.dart.js"
+        }
       };
-      
-      // Initialize Flutter using the recommended approach
-      _flutter.loader.load({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        ...rendererOptions
-      });
+      // Attach the serviceWorker if available
+      var serviceWorkerVersion = null;
+      var scriptLoaded = false;
+      function loadMainDartJs() {
+        if (scriptLoaded) {
+          return;
+        }
+        scriptLoaded = true;
+        var scriptTag = document.createElement('script');
+        scriptTag.src = 'main.dart.js';
+        scriptTag.type = 'application/javascript';
+        document.body.append(scriptTag);
+      }
+
+      if ('serviceWorker' in navigator) {
+        // Service workers are supported. Use them.
+        window.addEventListener('load', function () {
+          // Wait for registration to finish before dropping the <script> tag.
+          navigator.serviceWorker.register('flutter_service_worker.js?v=' + serviceWorkerVersion);
+        });
+      }
+
+      // Manually inject main.dart.js after a short delay
+      window.setTimeout(loadMainDartJs, 800);
     });
   </script>
 </body>

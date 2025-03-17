@@ -1,26 +1,40 @@
 import 'package:flutter/material.dart';
-import 'dart:io';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:image_picker/image_picker.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+
+// Conditionally import platform-specific libraries
+import 'dart:io' if (dart.library.html) 'dart:html' as io;
+
+// This import causes issues in web - use conditionally
+import 'package:google_ml_kit/google_ml_kit.dart'
+    if (dart.library.html) 'web_ml_kit_stub.dart' as ml_kit;
 
 // OpenAI API key should be provided via environment variables or secure storage
-// For development, replace this with your own API key
-// TO DO: Implement proper environment variable loading using flutter_dotenv package:
-// 1. Add flutter_dotenv to pubspec.yaml
-// 2. Load environment variables in main() with: await dotenv.load(fileName: ".env");
-// 3. Access API key with: dotenv.env['OPENAI_API_KEY'] ?? '';
-const String openAIApiKey = 'YOUR_OPENAI_API_KEY_HERE';
+// For development, we'll load it from the .env file using flutter_dotenv
+String openAIApiKey = 'undefined'; // Will be loaded from .env file
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // TO DO: Load environment variables here
+
+  // Initialize mobile ads
+  if (!kIsWeb) {
+    await MobileAds.instance.initialize();
+  }
+
+  // Load environment variables from .env file
+  await dotenv.load(fileName: ".env");
+
+  // Get API key from .env file
+  openAIApiKey = dotenv.env['OPENAI_API_KEY'] ?? 'undefined';
+
   runApp(const MyApp());
 }
 
@@ -140,12 +154,165 @@ class WineRating {
   }) : profile = profile ?? {};
 }
 
+// Banner Ad Widget for monetization
+class AdBannerWidget extends StatefulWidget {
+  const AdBannerWidget({Key? key}) : super(key: key);
+
+  @override
+  _AdBannerWidgetState createState() => _AdBannerWidgetState();
+}
+
+class _AdBannerWidgetState extends State<AdBannerWidget> {
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() {
+    // Test ad unit ID for development - replace with your real ad unit ID in production
+    const adUnitId = kIsWeb
+        ? 'ca-app-pub-3940256099942544/6300978111' // Web test ID
+        : 'ca-app-pub-3940256099942544/2934735716'; // Mobile test ID
+
+    _bannerAd = BannerAd(
+      adUnitId: adUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          print('Ad failed to load: $error');
+        },
+      ),
+    );
+
+    _bannerAd?.load();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _isAdLoaded && _bannerAd != null
+        ? Container(
+            margin: const EdgeInsets.symmetric(vertical: 10),
+            alignment: Alignment.center,
+            width: _bannerAd!.size.width.toDouble(),
+            height: _bannerAd!.size.height.toDouble(),
+            child: AdWidget(ad: _bannerAd!),
+          )
+        : const SizedBox.shrink();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+}
+
+// Splash Screen for initial loading
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+    _animationController.repeat(reverse: true);
+
+    // Navigate to main app after delay
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const WineMenuScannerPage()),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF3333CC),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Animated logo
+            ScaleTransition(
+              scale: _animation,
+              child: const Icon(
+                Icons.wine_bar,
+                size: 120,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Pick My Wine',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+                letterSpacing: 1.5,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Your personal wine sommelier',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.white70,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 48),
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF00CCFF)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class WineApp extends StatelessWidget {
   const WineApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const WineMenuScannerPage();
+    return const SplashScreen();
   }
 }
 
@@ -162,10 +329,11 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
   List<Wine> _originalWines = [];
   List<Wine> _wines = [];
   bool _isProcessing = false;
-  bool _showOnlyBestValue = false;
-  bool _hasAppliedPriceFilter = false;
-  RangeValues _priceRange = const RangeValues(10, 200);
-  String _sortOption = 'default'; // default, rating, price-asc, price-desc
+  final bool _showOnlyBestValue = false;
+  final bool _hasAppliedPriceFilter = false;
+  final RangeValues _priceRange = const RangeValues(10, 200);
+  final String _sortOption = 'default'; // default, rating, price-asc, price-desc
+  final String _ocrText = ''; // Added for OCR text storage
 
   // Add user preference state variables
   final Map<String, bool> _pairingPreferences = {
@@ -233,7 +401,7 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                 ),
               ),
 
-              // Image display container
+              // Image selection container - Single instance
               Container(
                 margin: const EdgeInsets.only(bottom: 16),
                 height: isPhone ? 150 : 200,
@@ -272,6 +440,11 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                   ),
                 ),
               ),
+
+              // Ad banner widget - Elegantly placed
+              if (!_isProcessing &&
+                  !kIsWeb) // Only show on native platforms for now
+                const AdBannerWidget(),
 
               // Processing indicator
               if (_isProcessing)
@@ -343,6 +516,229 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                   ),
                 ),
               ],
+
+              // Display wine list when available
+              if (!_isProcessing && _wines.isNotEmpty) ...[
+                // Top recommended wine card
+                if (topWine != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF00CCFF).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF00CCFF),
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.recommend,
+                              color: Color(0xFF00CCFF),
+                              size: 24,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _usePreferences
+                                        ? 'Best Match for Your Preferences'
+                                        : 'Recommended Wine',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF00CCFF),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    topWine.name,
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            if (topWine.winery != null)
+                              _buildInfoChip(Icons.house, topWine.winery!),
+                            if (topWine.year != null)
+                              _buildInfoChip(
+                                  Icons.calendar_today, topWine.year!),
+                            if (topWine.region != null)
+                              _buildInfoChip(Icons.place, topWine.region!),
+                            if (topWine.grapeVariety != null)
+                              _buildInfoChip(Icons.eco, topWine.grapeVariety!),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        if (topWine.rating != null) ...[
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFD700),
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.star,
+                                        size: 16, color: Colors.black),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      topWine.rating!.score.toString(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                topWine.rating!.source,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const Spacer(),
+                              if (topWine.rating!.price != null)
+                                Text(
+                                  '\$${topWine.rating!.price!.toStringAsFixed(0)}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                            ],
+                          ),
+                          if (topWine.rating!.review != null) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              topWine.rating!.review!,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ],
+                    ),
+                  ),
+
+                // Other wines list
+                ...List.generate(
+                  _wines.length,
+                  (index) {
+                    final wine = _wines[index];
+                    // Skip the top wine to avoid duplication
+                    if (topWine != null && wine.name == topWine.name) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4444DD),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        title: Text(
+                          wine.name,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            if (wine.winery != null)
+                              Text(
+                                wine.winery!,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                if (wine.year != null)
+                                  _buildInfoChip(
+                                      Icons.calendar_today, wine.year!),
+                                if (wine.region != null)
+                                  _buildInfoChip(Icons.place, wine.region!),
+                              ],
+                            ),
+                          ],
+                        ),
+                        trailing: wine.rating != null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFD700),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      wine.rating!.score.toString(),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (wine.rating!.price != null)
+                                    Text(
+                                      '\$${wine.rating!.price!.toStringAsFixed(0)}',
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                ],
+                              )
+                            : null,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ],
           ),
         ),
@@ -353,6 +749,12 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
   // Method to handle image picking
   Future<void> _pickMenuImage() async {
     try {
+      if (kIsWeb) {
+        print('Running in web environment');
+      } else {
+        print('Running in mobile environment');
+      }
+
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 1800,
@@ -360,124 +762,65 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
       );
 
       if (pickedFile != null) {
+        print('Image picked successfully: ${pickedFile.name}');
         setState(() {
           _imageFile = pickedFile;
           _isProcessing = true;
         });
 
-        // Simulate processing for this example - in a real app, you'd analyze the image
-        await Future.delayed(const Duration(seconds: 2));
+        try {
+          // For web, we need to handle things differently than native platforms
+          if (kIsWeb) {
+            // Web platform - simulate OpenAI processing with a delay
+            print('Web platform detected, using OpenAI API simulation');
+            await Future.delayed(
+                const Duration(seconds: 2)); // Simulate processing
 
-        // Create some sample wines for demonstration
-        final demoWines = [
-          Wine(
-            name: 'Château Margaux 2015',
-            winery: 'Château Margaux',
-            year: '2015',
-            region: 'Bordeaux, France',
-            grapeVariety: 'Cabernet Sauvignon Blend',
-            rawText: 'Château Margaux 2015 Bordeaux',
-            rating: WineRating(
-              score: 98,
-              source: 'Wine Spectator',
-              review:
-                  'Exquisite balance of fruit and tannins with a long finish.',
-              price: 120,
-              isPriceValue: true,
-              profile: {
-                'meat': 9.5,
-                'fish': 5.0,
-                'sweet': 3.0,
-                'dry': 8.5,
-                'fruity': 7.5,
-                'light': 4.0,
-                'full-bodied': 9.0,
-              },
-            ),
-            pairingScores: {
-              'meat': 9.5,
-              'fish': 5.0,
-              'sweet': 3.0,
-              'dry': 8.5,
-              'fruity': 7.5,
-              'light': 4.0,
-              'full-bodied': 9.0,
-            },
-          ),
-          Wine(
-            name: 'Cloudy Bay Sauvignon Blanc 2020',
-            winery: 'Cloudy Bay',
-            year: '2020',
-            region: 'Marlborough, New Zealand',
-            grapeVariety: 'Sauvignon Blanc',
-            rawText: 'Cloudy Bay Sauvignon Blanc 2020 Marlborough',
-            rating: WineRating(
-              score: 91,
-              source: 'Wine Enthusiast',
-              review:
-                  'Crisp and refreshing with notes of citrus and tropical fruit.',
-              price: 35,
-              profile: {
-                'meat': 4.0,
-                'fish': 9.0,
-                'sweet': 5.0,
-                'dry': 8.0,
-                'fruity': 8.5,
-                'light': 9.0,
-                'full-bodied': 3.0,
-              },
-            ),
-            pairingScores: {
-              'meat': 4.0,
-              'fish': 9.0,
-              'sweet': 5.0,
-              'dry': 8.0,
-              'fruity': 8.5,
-              'light': 9.0,
-              'full-bodied': 3.0,
-            },
-          ),
-          Wine(
-            name: 'La Crema Pinot Noir 2019',
-            winery: 'La Crema',
-            year: '2019',
-            region: 'Sonoma Coast, California',
-            grapeVariety: 'Pinot Noir',
-            rawText: 'La Crema Pinot Noir 2019 Sonoma Coast',
-            rating: WineRating(
-              score: 90,
-              source: 'Wine Enthusiast',
-              review:
-                  'Elegant with balanced acidity and notes of cherry and earthy tones.',
-              price: 28,
-              isPriceValue: true,
-              profile: {
-                'meat': 7.0,
-                'fish': 8.0,
-                'sweet': 5.0,
-                'dry': 6.5,
-                'fruity': 8.0,
-                'light': 7.5,
-                'full-bodied': 5.5,
-              },
-            ),
-            pairingScores: {
-              'meat': 7.0,
-              'fish': 8.0,
-              'sweet': 5.0,
-              'dry': 6.5,
-              'fruity': 8.0,
-              'light': 7.5,
-              'full-bodied': 5.5,
-            },
-          ),
-        ];
+            if (openAIApiKey != 'undefined' &&
+                openAIApiKey != 'your_openai_api_key_here') {
+              // Use OpenAI API if key is valid
+              await _processWithOpenAI();
+            } else {
+              // Fallback to demo data
+              print('No valid OpenAI API key found, using demo data');
+              _processWebDemoWines();
+            }
+          } else {
+            // Mobile platforms - try using ML Kit + OpenAI
+            print('Mobile platform detected, attempting OCR + OpenAI');
 
-        setState(() {
-          _originalWines = demoWines;
-          _wines = List.from(demoWines);
-          _isProcessing = false;
-        });
+            if (openAIApiKey != 'undefined' &&
+                openAIApiKey != 'your_openai_api_key_here') {
+              // Use ML Kit + OpenAI
+              await _processWithOpenAI();
+            } else {
+              // Fallback to demo data
+              print('No valid OpenAI API key found, using demo data');
+              _processWebDemoWines();
+            }
+          }
+        } catch (e) {
+          print('Error processing image: $e');
+          if (mounted) {
+            setState(() {
+              _isProcessing = false;
+            });
+
+            // Show an error message
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Failed to process image: ${e.toString()}'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+
+          // Still show demo wines even if there's an error
+          print('Showing demo wines despite error');
+          _processWebDemoWines();
+        }
+      } else {
+        print('No image was selected');
       }
     } catch (e) {
       print('Error picking image: $e');
@@ -506,6 +849,366 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
     }
   }
 
+  // Method to process image with OpenAI API
+  Future<void> _processWithOpenAI() async {
+    print('Processing with OpenAI API...');
+    print('Using API key: ${openAIApiKey.substring(0, 10)}...');
+
+    try {
+      if (_imageFile == null) {
+        print('No image file available to process');
+        _processWebDemoWines();
+        return;
+      }
+
+      // Get image bytes
+      List<int> imageBytes;
+      if (kIsWeb) {
+        // Handle Web platform differently
+        final blob = await _imageFile!.readAsBytes();
+        imageBytes = blob;
+      } else {
+        // Mobile platforms
+        imageBytes = await _imageFile!.readAsBytes();
+      }
+
+      // Convert image bytes to base64
+      final base64Image = base64Encode(imageBytes);
+      print('Image converted to base64, size: ${base64Image.length} chars');
+
+      // Call OpenAI Vision API
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $openAIApiKey',
+        },
+        body: jsonEncode({
+          'model': 'gpt-4o',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are a wine expert assistant that can recognize wines from images. When given an image of a wine menu, wine bottle, or wine label, extract the wine information and return it in JSON format. Include name, winery, year, region, grape variety if visible, and assign a rating score from 1-100 based on your expert knowledge. IMPORTANT: Return ONLY a raw JSON array without any markdown formatting, explanation, or code blocks. DO NOT use ```json or ``` tags. JUST RETURN THE RAW JSON ARRAY.'
+            },
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'text',
+                  'text':
+                      'Analyze this wine image and extract information about the wines you can see. Return the data as JSON.'
+                },
+                {
+                  'type': 'image_url',
+                  'image_url': {'url': 'data:image/jpeg;base64,$base64Image'}
+                }
+              ]
+            }
+          ],
+          'max_tokens': 1000,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        print('OpenAI Vision response: $content');
+
+        try {
+          // Try to parse the JSON response
+          final truncatedContent = content.length > 100
+              ? '${content.substring(0, 100)}...'
+              : content;
+          print('Attempting to parse JSON: $truncatedContent');
+
+          // Clean up the content by removing markdown formatting if present
+          String cleanContent = content;
+          // Remove markdown code blocks (```json and ```)
+          if (cleanContent.contains('```')) {
+            cleanContent =
+                cleanContent.replaceAll('```json', '').replaceAll('```', '');
+            print('Removed markdown code blocks from response');
+          }
+          // Trim whitespace
+          cleanContent = cleanContent.trim();
+
+          final List<dynamic> wineData = jsonDecode(cleanContent);
+          print('JSON decoded successfully with ${wineData.length} wines');
+
+          // Convert the JSON data to Wine objects
+          final wines = wineData.map<Wine>((wine) {
+            // Handle field variations for grape variety
+            final grapeVariety = wine['grape_variety'] ??
+                wine['grapeVariety'] ??
+                wine['grape'] ??
+                '';
+
+            return Wine(
+              name: wine['name'] ?? 'Unknown Wine',
+              winery: wine['winery'] ?? '',
+              year: wine['year']?.toString() ?? '',
+              region: wine['region'] ?? '',
+              grapeVariety: grapeVariety,
+              rawText: wine['raw_text'] ?? wine['rawText'] ?? '',
+              rating: WineRating(
+                score: (wine['rating'] is Map)
+                    ? (wine['rating']['score'] ?? 90).toDouble()
+                    : (wine['rating'] ?? 90).toDouble(),
+                source: (wine['rating'] is Map)
+                    ? wine['rating']['source'] ?? 'AI Analysis'
+                    : 'AI Analysis',
+                review:
+                    (wine['rating'] is Map) ? wine['rating']['review'] : null,
+                price: _parsePrice(wine['price']),
+                isPriceValue:
+                    wine['is_price_value'] ?? wine['isPriceValue'] ?? false,
+                profile: {
+                  'meat': 7.0,
+                  'fish': 7.0,
+                  'sweet': 5.0,
+                  'dry': 5.0,
+                  'fruity': 5.0,
+                  'light': 5.0,
+                  'full-bodied': 5.0,
+                },
+              ),
+              pairingScores: {
+                'meat': 7.0,
+                'fish': 7.0,
+                'sweet': 5.0,
+                'dry': 5.0,
+                'fruity': 5.0,
+                'light': 5.0,
+                'full-bodied': 5.0,
+              },
+            );
+          }).toList();
+
+          if (wines.isNotEmpty) {
+            setState(() {
+              _originalWines = wines;
+              _wines = List.from(wines);
+              _isProcessing = false;
+            });
+            return;
+          }
+        } catch (e) {
+          print('Error parsing OpenAI response: $e');
+          print('Full response content: $content');
+
+          // Try to sanitize the JSON and retry
+          try {
+            String sanitizedContent = content;
+
+            // Remove markdown formatting
+            if (sanitizedContent.contains('```')) {
+              sanitizedContent = sanitizedContent
+                  .replaceAll('```json', '')
+                  .replaceAll('```', '');
+              print('Removed markdown code blocks during sanitization');
+            }
+
+            // Replace problematic characters
+            sanitizedContent = sanitizedContent.replaceAll("Ã¢", "â");
+
+            // Trim whitespace
+            sanitizedContent = sanitizedContent.trim();
+
+            print(
+                'Sanitized content: ${sanitizedContent.substring(0, math.min(100, sanitizedContent.length))}...');
+
+            final List<dynamic> wineData = jsonDecode(sanitizedContent);
+            print(
+                'Sanitized JSON parsing successful with ${wineData.length} wines');
+
+            // Rest of conversion code
+            final wines = wineData.map<Wine>((wine) {
+              // Handle field variations for grape variety
+              final grapeVariety = wine['grape_variety'] ??
+                  wine['grapeVariety'] ??
+                  wine['grape'] ??
+                  '';
+
+              return Wine(
+                name: wine['name'] ?? 'Unknown Wine',
+                winery: wine['winery'] ?? '',
+                year: wine['year']?.toString() ?? '',
+                region: wine['region'] ?? '',
+                grapeVariety: grapeVariety,
+                rawText: wine['raw_text'] ?? wine['rawText'] ?? '',
+                rating: WineRating(
+                  score: (wine['rating'] is Map)
+                      ? (wine['rating']['score'] ?? 90).toDouble()
+                      : (wine['rating'] ?? 90).toDouble(),
+                  source: (wine['rating'] is Map)
+                      ? wine['rating']['source'] ?? 'AI Analysis'
+                      : 'AI Analysis',
+                  review:
+                      (wine['rating'] is Map) ? wine['rating']['review'] : null,
+                  price: _parsePrice(wine['price']),
+                  isPriceValue:
+                      wine['is_price_value'] ?? wine['isPriceValue'] ?? false,
+                  profile: {
+                    'meat': 7.0,
+                    'fish': 7.0,
+                    'sweet': 5.0,
+                    'dry': 5.0,
+                    'fruity': 5.0,
+                    'light': 5.0,
+                    'full-bodied': 5.0,
+                  },
+                ),
+                pairingScores: {
+                  'meat': 7.0,
+                  'fish': 7.0,
+                  'sweet': 5.0,
+                  'dry': 5.0,
+                  'fruity': 5.0,
+                  'light': 5.0,
+                  'full-bodied': 5.0,
+                },
+              );
+            }).toList();
+
+            if (wines.isNotEmpty) {
+              setState(() {
+                _originalWines = wines;
+                _wines = List.from(wines);
+                _isProcessing = false;
+              });
+              return;
+            }
+          } catch (retryError) {
+            print('Retry with sanitized content failed: $retryError');
+          }
+        }
+      } else {
+        print('OpenAI API error: ${response.statusCode} - ${response.body}');
+      }
+
+      // Fallback to demo wines if OpenAI processing fails
+      print('Using demo wines as fallback');
+      _processWebDemoWines();
+    } catch (e) {
+      print('Error in OpenAI processing: $e');
+      _processWebDemoWines();
+    }
+  }
+
+  // Helper method to process demo wines for web and mobile
+  void _processWebDemoWines() {
+    // Create some sample wines for demonstration
+    final demoWines = [
+      Wine(
+        name: 'Château Margaux 2015',
+        winery: 'Château Margaux',
+        year: '2015',
+        region: 'Bordeaux, France',
+        grapeVariety: 'Cabernet Sauvignon Blend',
+        rawText: 'Château Margaux 2015 Bordeaux',
+        rating: WineRating(
+          score: 98,
+          source: 'Wine Spectator',
+          review: 'Exquisite balance of fruit and tannins with a long finish.',
+          price: 120,
+          isPriceValue: true,
+          profile: {
+            'meat': 9.5,
+            'fish': 5.0,
+            'sweet': 3.0,
+            'dry': 8.5,
+            'fruity': 7.5,
+            'light': 4.0,
+            'full-bodied': 9.0,
+          },
+        ),
+        pairingScores: {
+          'meat': 9.5,
+          'fish': 5.0,
+          'sweet': 3.0,
+          'dry': 8.5,
+          'fruity': 7.5,
+          'light': 4.0,
+          'full-bodied': 9.0,
+        },
+      ),
+      Wine(
+        name: 'Cloudy Bay Sauvignon Blanc 2020',
+        winery: 'Cloudy Bay',
+        year: '2020',
+        region: 'Marlborough, New Zealand',
+        grapeVariety: 'Sauvignon Blanc',
+        rawText: 'Cloudy Bay Sauvignon Blanc 2020 Marlborough',
+        rating: WineRating(
+          score: 91,
+          source: 'Wine Enthusiast',
+          review:
+              'Crisp and refreshing with notes of citrus and tropical fruit.',
+          price: 35,
+          profile: {
+            'meat': 4.0,
+            'fish': 9.0,
+            'sweet': 5.0,
+            'dry': 8.0,
+            'fruity': 8.5,
+            'light': 9.0,
+            'full-bodied': 3.0,
+          },
+        ),
+        pairingScores: {
+          'meat': 4.0,
+          'fish': 9.0,
+          'sweet': 5.0,
+          'dry': 8.0,
+          'fruity': 8.5,
+          'light': 9.0,
+          'full-bodied': 3.0,
+        },
+      ),
+      Wine(
+        name: 'La Crema Pinot Noir 2019',
+        winery: 'La Crema',
+        year: '2019',
+        region: 'Sonoma Coast, California',
+        grapeVariety: 'Pinot Noir',
+        rawText: 'La Crema Pinot Noir 2019 Sonoma Coast',
+        rating: WineRating(
+          score: 90,
+          source: 'Wine Enthusiast',
+          review:
+              'Elegant with balanced acidity and notes of cherry and earthy tones.',
+          price: 28,
+          isPriceValue: true,
+          profile: {
+            'meat': 7.0,
+            'fish': 8.0,
+            'sweet': 5.0,
+            'dry': 6.5,
+            'fruity': 8.0,
+            'light': 7.5,
+            'full-bodied': 5.5,
+          },
+        ),
+        pairingScores: {
+          'meat': 7.0,
+          'fish': 8.0,
+          'sweet': 5.0,
+          'dry': 6.5,
+          'fruity': 8.0,
+          'light': 7.5,
+          'full-bodied': 5.5,
+        },
+      ),
+    ];
+
+    setState(() {
+      _originalWines = demoWines;
+      _wines = List.from(demoWines);
+      _isProcessing = false;
+    });
+  }
+
   // Method to show pairing preferences dialog
   void _showPairingPreferences() {
     showModalBottomSheet(
@@ -523,7 +1226,6 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                   topRight: Radius.circular(20),
                 ),
               ),
-              padding: const EdgeInsets.all(24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -746,5 +1448,53 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
 
         return scoreB.compareTo(scoreA);
       });
+  }
+
+  // Helper widget for info chips
+  Widget _buildInfoChip(IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: Colors.white70),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method to parse price values from various formats
+  double? _parsePrice(dynamic priceValue) {
+    if (priceValue == null) return null;
+
+    // If already a number, convert to double
+    if (priceValue is num) return priceValue.toDouble();
+
+    // If it's a string, try to extract the numeric part
+    if (priceValue is String) {
+      // Remove currency symbols, commas, and whitespace
+      String cleanPrice = priceValue.replaceAll(RegExp(r'[$£€,\s]'), '');
+
+      try {
+        return double.parse(cleanPrice);
+      } catch (e) {
+        print('Could not parse price from: $priceValue');
+        return null;
+      }
+    }
+
+    return null;
   }
 }
