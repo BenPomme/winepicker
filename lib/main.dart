@@ -2375,36 +2375,65 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
   Future<List<String>> _openAiWineReviews(
       String wineName, String winery, String year) async {
     try {
-      print(
-          "Using enhanced wine review simulation for: $wineName ($winery, $year)");
+      print("Searching for real wine reviews for: $wineName ($winery, $year)");
 
-      // Generate reviews for white wines differently than red wines
-      bool isWhiteWine = wineName.toLowerCase().contains('blanc') ||
-          wineName.toLowerCase().contains('chardonnay') ||
-          wineName.toLowerCase().contains('sauvignon') ||
-          wineName.toLowerCase().contains('riesling');
+      // Use GPT-4o with browsing capabilities to search for reviews
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $openAIApiKey',
+        },
+        body: jsonEncode({
+          'model': 'gpt-4o',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are a wine expert assistant that can research wine reviews online. Search for ratings and reviews for the specified wine from reputable sources like Vivino, Wine Spectator, Wine Enthusiast, or similar sources. Return exactly 3 reviews with ratings in the format: "Source (Score): Review text". Do not make up reviews - if you cannot find reviews for this specific wine, say so clearly.'
+            },
+            {
+              'role': 'user',
+              'content':
+                  'Find reviews and ratings for the wine: $wineName, by $winery, vintage $year. Return only the 3 most relevant reviews from reputable sources.'
+            }
+          ],
+          'temperature': 0.5,
+          'max_tokens': 1000,
+        }),
+      );
 
-      // Generate ratings from reputable sources
-      final random = math.Random();
-      final vivinoScore = (3.5 + random.nextDouble() * 1.5).toStringAsFixed(1);
-      final wineSpectatorScore = (85 + random.nextInt(15)).toString();
-      final wineEnthusiastScore = (85 + random.nextInt(15)).toString();
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'];
+        print(
+            "OpenAI returned content: ${content.substring(0, math.min<int>(100, content.length))}...");
 
-      if (isWhiteWine) {
-        return [
-          'Vivino ($vivinoScore/5): "${_getWhiteWineReviewText(wineName)}"',
-          'Wine Spectator ($wineSpectatorScore/100): "${_getWhiteWineReviewText(wineName)}"',
-          'Wine Enthusiast ($wineEnthusiastScore/100): "${_getWhiteWineReviewText(wineName)}"',
-        ];
-      } else {
-        return [
-          'Vivino ($vivinoScore/5): "${_getRedWineReviewText(wineName)}"',
-          'Wine Spectator ($wineSpectatorScore/100): "${_getRedWineReviewText(wineName)}"',
-          'Wine Enthusiast ($wineEnthusiastScore/100): "${_getRedWineReviewText(wineName)}"',
-        ];
+        // Parse the content into reviews
+        List<String> reviews = [];
+        final lines = content.split('\n');
+        for (var line in lines) {
+          final trimmedLine = line.trim();
+          if (trimmedLine.isNotEmpty &&
+              (trimmedLine.contains('Vivino') ||
+                  trimmedLine.contains('Wine Spectator') ||
+                  trimmedLine.contains('Wine Enthusiast') ||
+                  trimmedLine.contains('Decanter') ||
+                  trimmedLine.contains('James Suckling') ||
+                  trimmedLine.contains('Robert Parker'))) {
+            reviews.add(trimmedLine);
+          }
+        }
+
+        if (reviews.isNotEmpty) {
+          print("Found ${reviews.length} real reviews");
+          return reviews;
+        } else {
+          print("No structured reviews found in response");
+        }
       }
     } catch (e) {
-      print("Error in enhanced wine review simulation: $e");
+      print("Error searching for wine reviews: $e");
     }
     // Fallback to simulated reviews if OpenAI call fails
     return _simulateWineReviewSearch(wineName, winery, year);
@@ -2413,64 +2442,59 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
   Future<String> _openAiWineImage(
       String wineName, String winery, String year) async {
     try {
-      print(
-          "Using enhanced wine image simulation for: $wineName ($winery, $year)");
+      print("Searching for real wine image for: $wineName ($winery, $year)");
 
-      // Determine wine type and pick appropriate images
-      bool isWhiteWine = wineName.toLowerCase().contains('blanc') ||
-          wineName.toLowerCase().contains('chardonnay') ||
-          wineName.toLowerCase().contains('sauvignon') ||
-          wineName.toLowerCase().contains('riesling');
+      // Use GPT-4o with browsing capabilities to search for wine bottle images
+      final response = await http.post(
+        Uri.parse('https://api.openai.com/v1/chat/completions'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $openAIApiKey',
+        },
+        body: jsonEncode({
+          'model': 'gpt-4o',
+          'messages': [
+            {
+              'role': 'system',
+              'content':
+                  'You are a wine expert assistant that can search for wine bottle images online. Search for an image of the specified wine bottle from reputable sources like wine.com, vivino.com, or wine-searcher.com. Return ONLY the direct image URL without any explanation. The URL must end with a common image extension like .jpg, .jpeg, .png, or .webp. If you cannot find an exact match, return a URL to an image of a similar wine from the same winery.'
+            },
+            {
+              'role': 'user',
+              'content':
+                  'Find an image for the wine: $wineName, by $winery, vintage $year. Return only the direct image URL and nothing else.'
+            }
+          ],
+          'temperature': 0.2,
+          'max_tokens': 200,
+        }),
+      );
 
-      bool isChampagne = wineName.toLowerCase().contains('champagne') ||
-          wineName.toLowerCase().contains('sparkling') ||
-          wineName.toLowerCase().contains('brut');
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final content = data['choices'][0]['message']['content'].trim();
+        print(
+            "OpenAI returned image URL: ${content.substring(0, math.min<int>(100, content.length))}...");
 
-      bool isRose = wineName.toLowerCase().contains('rosé') ||
-          wineName.toLowerCase().contains('rose');
-
-      // High-quality wine bottle images from reliable sources
-      if (isWhiteWine) {
-        return 'https://www.wine.com/product/images/w_480,h_600,c_fit,q_auto:good,fl_progressive/ek0zkoerqe8azvvbxaax.jpg';
-      } else if (isChampagne) {
-        return 'https://www.wine.com/product/images/w_480,h_600,c_fit,q_auto:good,fl_progressive/dwfh3v1zcgk7tggfr6pd.jpg';
-      } else if (isRose) {
-        return 'https://www.wine.com/product/images/w_480,h_600,c_fit,q_auto:good,fl_progressive/nxeb8iplfqo1ib0md59r.jpg';
-      } else {
-        // Default to red wine
-        return 'https://www.wine.com/product/images/w_480,h_600,c_fit,q_auto:good,fl_progressive/iqpvw7bpfkxgaryqnrb2.jpg';
+        // Check if it's a valid image URL
+        if (content.startsWith('http') &&
+            (content.endsWith('.jpg') ||
+                content.endsWith('.jpeg') ||
+                content.endsWith('.png') ||
+                content.endsWith('.webp') ||
+                content.contains('.jpg?') ||
+                content.contains('.jpeg?') ||
+                content.contains('.png?') ||
+                content.contains('.webp?'))) {
+          return content;
+        } else {
+          print("Invalid image URL returned");
+        }
       }
     } catch (e) {
-      print("Error in enhanced wine image simulation: $e");
+      print("Error searching for wine image: $e");
     }
     // Fallback to simulated image search if OpenAI call fails
     return _simulateWineImageSearch(wineName, winery, year);
-  }
-
-  // Helper methods for enhanced wine review simulation
-  String _getWhiteWineReviewText(String wineName) {
-    final random = math.Random();
-    final whiteWineReviews = [
-      'Crisp and refreshing with vibrant citrus notes and a clean mineral finish',
-      'Aromatic with notes of green apple, pear, and a hint of tropical fruit',
-      'Elegant and balanced with a lovely acidity and subtle floral undertones',
-      'Fresh and zesty with lemon, lime, and a touch of honeysuckle',
-      'Well-structured with stone fruit flavors and a long, satisfying finish',
-    ];
-
-    return whiteWineReviews[random.nextInt(whiteWineReviews.length)];
-  }
-
-  String _getRedWineReviewText(String wineName) {
-    final random = math.Random();
-    final redWineReviews = [
-      'Rich and full-bodied with notes of black cherry, plum, and subtle oak',
-      'Elegant tannins with dark fruit flavors and a hint of spice on the finish',
-      'Complex and layered with blackberry, chocolate, and a touch of vanilla',
-      'Smooth and silky with excellent structure and aging potential',
-      'Bold and expressive with dark berries, tobacco, and well-integrated tannins',
-    ];
-
-    return redWineReviews[random.nextInt(redWineReviews.length)];
   }
 }
