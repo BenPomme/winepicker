@@ -24,6 +24,19 @@ This app uses OpenAI's API for wine analysis. To set up your own API key:
 
 Never commit your actual API key to Git. The `.env` file is already in the `.gitignore`.
 
+### Serper API Key
+
+This app uses Serper's API for web searches to fetch real wine reviews and images. To set up your own API key:
+
+1. Sign up for a Serper API key at https://serper.dev
+2. Add your Serper API key to the environment variables:
+   ```bash
+   export SERPER_API_KEY=your_serper_api_key_here
+   ```
+3. Restart the app
+
+Never commit your actual Serper API key to Git.
+
 ## How to Use
 
 1. **Scan Wines**: Tap the camera icon to take a photo of a wine menu or select one from your gallery
