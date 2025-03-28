@@ -470,13 +470,15 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            LinearProgressIndicator(
-                              value: _analysisProgress,
-                              backgroundColor: Colors.white.withOpacity(0.2),
-                              valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Color(0xFF00CCFF)),
-                              minHeight: 10,
+                            ClipRRect(
                               borderRadius: BorderRadius.circular(5),
+                              child: LinearProgressIndicator(
+                                value: _analysisProgress,
+                                backgroundColor: Colors.white.withOpacity(0.2),
+                                valueColor: const AlwaysStoppedAnimation<Color>(
+                                    Color(0xFF00CCFF)),
+                                minHeight: 10,
+                              ),
                             ),
                             const SizedBox(height: 8),
                             Text(
