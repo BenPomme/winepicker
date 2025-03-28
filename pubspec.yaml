@@ -34,7 +34,7 @@ dependencies:
   # API services
   http: ^1.1.0  # For API calls
   share_plus: ^10.0.0
-  flutter_launcher_icons: ^0.14.3
+  flutter_launcher_icons: ^0.13.1
   flutter_dotenv: ^5.1.0  # For loading environment variables
   google_mobile_ads: ^4.0.0  # For monetization with ads
   fluttertoast: ^8.2.2
@@ -73,3 +73,6 @@ flutter_launcher_icons:
     generate: false
   macos:
     generate: true
+
+dependency_overrides:
+  file_selector_android: ^0.5.1+13
