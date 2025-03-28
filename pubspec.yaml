@@ -37,7 +37,6 @@ dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_dotenv: ^5.1.0  # For loading environment variables
   google_mobile_ads: ^4.0.0  # For monetization with ads
-  fluttertoast: ^8.0.9
   shared_preferences: ^2.0.18
   google_fonts: ^4.0.4
   flutter_rating_bar: ^4.0.1
