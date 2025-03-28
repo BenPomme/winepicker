@@ -33,7 +33,7 @@ dependencies:
   url_launcher: ^6.1.14  # For opening links to wine information
   # API services
   http: ^1.1.0  # For API calls
-  share_plus: ^10.0.0
+  share_plus: ^7.2.1
   flutter_launcher_icons: ^0.13.1
   flutter_dotenv: ^5.1.0  # For loading environment variables
   google_mobile_ads: ^4.0.0  # For monetization with ads
