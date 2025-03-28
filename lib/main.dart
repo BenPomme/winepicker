@@ -87,37 +87,49 @@ class MyApp extends StatelessWidget {
   }
 }
 
+class Rating {
+  double score;
+  double? price;
+  String source;
+  String? review;
+  String? summary;
+  bool? isPriceValue;
+
+  Rating({
+    required this.score,
+    this.price,
+    this.source = 'Wine Rating',
+    this.review,
+    this.summary,
+    this.isPriceValue,
+  });
+}
+
 class Wine {
   final String name;
-  final String? year;
   final String? winery;
-  final String? grapeVariety;
+  final String? year;
   final String? region;
-  final String rawText;
+  final String? grapeVariety;
   final WineRating? rating;
-  final Map<String, double> pairingScores; // Added pairing scores
-  String? userImage; // User uploaded image
-  String? bottleImageUrl; // URL to wine bottle image
-  List<String> webComments = []; // Comments from web reviews
-  double? userRating; // User's rating (1-5 stars)
-  final String? fullText; // Full text from label for search enhancement
+  final String? userImage;
+  final List<String> webComments;
+  final Map<String, double> pairingScores;
+  final String rawText;
 
   Wine({
     required this.name,
-    this.year,
     this.winery,
-    this.grapeVariety,
+    this.year,
     this.region,
-    required this.rawText,
+    this.grapeVariety,
     this.rating,
-    Map<String, double>? pairingScores,
     this.userImage,
-    this.bottleImageUrl,
     List<String>? webComments,
-    this.userRating,
-    this.fullText,
-  })  : pairingScores = pairingScores ?? {},
-        webComments = webComments ?? [];
+    Map<String, double>? pairingScores,
+    this.rawText = '',
+  })  : webComments = webComments ?? [],
+        pairingScores = pairingScores ?? {};
 
   @override
   String toString() {
@@ -126,21 +138,21 @@ class Wine {
 }
 
 class WineRating {
-  final double score;
-  final String source;
-  final String? review;
-  final String? summary; // Added summary field for concise review info
-  final double? price;
-  final bool isPriceValue;
-  final Map<String, double> profile; // Added for wine profile characteristics
+  double score;
+  double? price;
+  String source;
+  String? review;
+  String? summary;
+  bool? isPriceValue;
+  Map<String, double> profile;
 
   WineRating({
     required this.score,
-    required this.source,
-    this.review,
-    this.summary, // Adding the new summary parameter
     this.price,
-    this.isPriceValue = false,
+    this.source = 'Wine Rating',
+    this.review,
+    this.summary,
+    this.isPriceValue,
     Map<String, double>? profile,
   }) : profile = profile ?? {};
 }
@@ -614,12 +626,11 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Wine image at the top
-                        if (topWine.userImage != null ||
-                            topWine.bottleImageUrl != null)
+                        if (topWine.userImage != null)
                           ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              topWine.userImage ?? topWine.bottleImageUrl!,
+                              topWine.userImage!,
                               height: 200,
                               width: double.infinity,
                               fit: BoxFit.cover,
@@ -651,9 +662,6 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                               },
                             ),
                           ),
-                        if (topWine.userImage != null ||
-                            topWine.bottleImageUrl != null)
-                          const SizedBox(height: 16),
 
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -852,12 +860,11 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                         ),
                         children: [
                           // Wine image if available
-                          if (wine.userImage != null ||
-                              wine.bottleImageUrl != null) ...[
+                          if (wine.userImage != null) ...[
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
-                                wine.userImage ?? wine.bottleImageUrl!,
+                                wine.userImage!,
                                 height: 150,
                                 width: double.infinity,
                                 fit: BoxFit.cover,
@@ -1140,7 +1147,7 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
           'Authorization': 'Bearer $openAIApiKey',
         },
         body: jsonEncode({
-          'model': 'gpt-4-vision-preview',
+          'model': 'gpt-4o',
           'messages': [
             {
               'role': 'system',
@@ -1629,10 +1636,11 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                       },
                     )
                   : null,
-              bottleImageUrl: wine['bottle_image_url'] as String?,
+              userImage: wine['user_image'] as String?,
               webComments: webComments,
-              userRating: wine['user_rating'] as double?,
-              fullText: wine['full_text'] as String?,
+              pairingScores: wine['pairing_scores'] != null
+                  ? Map<String, double>.from(wine['pairing_scores'])
+                  : {},
             );
           }).toList();
 
@@ -1740,12 +1748,13 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
                         },
                       )
                     : null,
-                bottleImageUrl: wine['bottle_image_url'] as String?,
+                userImage: wine['user_image'] as String?,
                 webComments: wine['web_comments'] != null
                     ? List<String>.from(wine['web_comments'])
                     : [],
-                userRating: wine['user_rating'] as double?,
-                fullText: wine['full_text'] as String?,
+                pairingScores: wine['pairing_scores'] != null
+                    ? Map<String, double>.from(wine['pairing_scores'])
+                    : {},
               );
             }).toList();
 
@@ -2119,127 +2128,9 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
 
   Future<String> _openAiWineImage(
       String wineName, String winery, String year) async {
-    print(
-        "Searching for real wine image with Vivino: $wineName ($winery, $year)");
-    String imageUrl = '';
-    bool vivinoSuccess = false;
-
-    // Use a more reliable source for wine images - directly use wine library images that don't require CORS
-    // This will avoid the 403 Forbidden errors we're seeing with Shutterstock and other image providers
-    final reliableWineImages = [
-      'https://i.imgur.com/JFHkfFG.jpg', // Red wine bottle
-      'https://i.imgur.com/8rP7vFR.jpg', // White wine bottle
-      'https://i.imgur.com/vSJYwkN.jpg', // Champagne bottle
-      'https://i.imgur.com/2jJRC5g.jpg', // Rose wine bottle
-      'https://i.imgur.com/qWQtHRQ.jpg', // Bordeaux bottle
-    ];
-
-    try {
-      // First attempt: Try to get a real image from Vivino
-      // (keep existing Vivino API code but add a fallback)
-
-      // ... existing Vivino API code ...
-
-      final baseUrl = 'https://www.vivino.com';
-
-      // Format search query for Vivino
-      final searchParams = {
-        'country_code': 'US',
-        'currency_code': 'USD',
-        'grape_filter': 'varietal',
-        'min_rating': '1',
-        'order_by': 'ratings_average',
-        'order': 'desc',
-        'page': '1',
-        'price_range_max': '500',
-        'price_range_min': '0',
-        'wine_type_ids[]': '',
-        'query': '$wineName $winery $year',
-      };
-
-      // Rest of existing code for Vivino API...
-
-      // If Vivino search fails, immediately use the reliable images
-      if (!vivinoSuccess) {
-        // Use one of our reliable image URLs based on wine type or name
-        final random = math.Random();
-        final lowerWineName = wineName.toLowerCase();
-
-        if (lowerWineName.contains('champagne') ||
-            lowerWineName.contains('sparkling')) {
-          imageUrl = reliableWineImages[2]; // Champagne
-        } else if (lowerWineName.contains('rosé') ||
-            lowerWineName.contains('rose')) {
-          imageUrl = reliableWineImages[3]; // Rosé
-        } else if (lowerWineName.contains('cabernet') ||
-            lowerWineName.contains('merlot') ||
-            lowerWineName.contains('bordeaux') ||
-            lowerWineName.contains('syrah')) {
-          imageUrl = reliableWineImages[4]; // Bordeaux
-        } else if (lowerWineName.contains('red') ||
-            lowerWineName.contains('noir') ||
-            lowerWineName.contains('malbec') ||
-            lowerWineName.contains('zinfandel')) {
-          imageUrl = reliableWineImages[0]; // Red
-        } else if (lowerWineName.contains('white') ||
-            lowerWineName.contains('blanc') ||
-            lowerWineName.contains('chardonnay') ||
-            lowerWineName.contains('riesling')) {
-          imageUrl = reliableWineImages[1]; // White
-        } else {
-          // If we can't determine type, select a random image
-          imageUrl =
-              reliableWineImages[random.nextInt(reliableWineImages.length)];
-        }
-
-        print("Using reliable wine image library: $imageUrl");
-        return imageUrl;
-      }
-    } catch (e) {
-      print('Error in Vivino image search: $e');
-    }
-
-    // Rest of existing code for Serper API...
-
-    // For OpenAI suggested image, replace the implementation with our reliable images
-    if (imageUrl.isEmpty) {
-      print("Using OpenAI for stock image recommendation");
-
-      // Instead of asking OpenAI, use our reliable image collection
-      final random = math.Random();
-      final lowerWineName = wineName.toLowerCase();
-
-      if (lowerWineName.contains('champagne') ||
-          lowerWineName.contains('sparkling')) {
-        imageUrl = reliableWineImages[2]; // Champagne
-      } else if (lowerWineName.contains('rosé') ||
-          lowerWineName.contains('rose')) {
-        imageUrl = reliableWineImages[3]; // Rosé
-      } else if (lowerWineName.contains('cabernet') ||
-          lowerWineName.contains('merlot') ||
-          lowerWineName.contains('bordeaux') ||
-          lowerWineName.contains('syrah')) {
-        imageUrl = reliableWineImages[4]; // Bordeaux
-      } else if (lowerWineName.contains('red') ||
-          lowerWineName.contains('noir') ||
-          lowerWineName.contains('malbec') ||
-          lowerWineName.contains('zinfandel')) {
-        imageUrl = reliableWineImages[0]; // Red
-      } else if (lowerWineName.contains('white') ||
-          lowerWineName.contains('blanc') ||
-          lowerWineName.contains('chardonnay') ||
-          lowerWineName.contains('riesling')) {
-        imageUrl = reliableWineImages[1]; // White
-      } else {
-        // If we can't determine type, select a random image
-        imageUrl =
-            reliableWineImages[random.nextInt(reliableWineImages.length)];
-      }
-
-      print("Using wine image library: $imageUrl");
-    }
-
-    return imageUrl;
+    // Return empty string to prevent CORS issues with image fetching
+    print("Skipping image fetching to avoid CORS issues");
+    return '';
   }
 
   // Helper method to simulate wine review search
@@ -2887,9 +2778,9 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
         ...List.generate(5, (index) {
           return IconButton(
             icon: Icon(
-              index < (wine.userRating ?? 0).floor()
+              index < (wine.rating?.score ?? 0).floor()
                   ? Icons.star
-                  : index < (wine.userRating ?? 0)
+                  : index < (wine.rating?.score ?? 0)
                       ? Icons.star_half
                       : Icons.star_border,
               color: const Color(0xFFFFD700),
@@ -2898,7 +2789,7 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
             onPressed: () {
               setState(() {
                 // Update the wine's user rating
-                wine.userRating = index + 1.0;
+                wine.rating?.score = index + 1.0;
               });
             },
           );
@@ -2941,7 +2832,7 @@ class _WineMenuScannerPageState extends State<WineMenuScannerPage> {
     }
 
     // Great Value label
-    if (wine.rating != null && wine.rating!.isPriceValue) {
+    if (wine.rating != null && wine.rating!.isPriceValue == true) {
       labels.add(
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
