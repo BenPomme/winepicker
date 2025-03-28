@@ -46,6 +46,22 @@ Never commit your actual Serper API key to Git.
 5. **Filter Options**: Use the filter icon to find wines within your price range
 6. **Sort Wines**: Tap the sort icon to arrange wines by rating, price, or preference match
 
+## Web Version
+
+To access the web version of Pick My Wine, visit [https://benpomme.github.io/winepicker/](https://benpomme.github.io/winepicker/)
+
+### Web Deployment
+
+The web version is automatically deployed to GitHub Pages when changes are pushed to the main branch. The deployment process:
+1. Uses GitHub Actions to build the Flutter web app
+2. Securely handles API keys using GitHub Secrets
+3. Deploys to the gh-pages branch
+
+To set up deployment for your own fork:
+1. Add your API keys as GitHub Secrets (OPENAI_API_KEY and SERPER_API_KEY)
+2. Enable GitHub Pages in repository settings (Settings → Pages)
+3. Set the source to "Deploy from a branch" with branch: gh-pages → /(root)
+
 ## Platform Support
 
 - **Mobile**: Native iOS and Android apps with full functionality

@@ -62,4 +62,5 @@ coverage/
 key.properties
 **/*.keystore
 **/*.jks
+# Environment configuration
 .env
