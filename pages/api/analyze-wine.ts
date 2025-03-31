@@ -532,7 +532,7 @@ export default async function handler(
             summary: aiSummary || '',
             additionalReviews: reviews.map(r => {
               const reviewScore = typeof r === 'string' 
-                ? extractRatingFromReviews([r]).score || 0
+                ? ratingInfo.score || 0
                 : r.rating || 0;
                 
               return {
