@@ -50,6 +50,8 @@ export interface AnalyzeWineResponse {
 export interface UploadState {
   isLoading: boolean;
   error: string | null;
+  progress?: number;
+  stage?: string;
 }
 
 // Preference settings
