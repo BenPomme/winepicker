@@ -564,7 +564,7 @@ export default async function handler(
     };
     
     const processedWines = await Promise.all(
-      identifiedWines.map(wineInfo => processWineWithTimeout(wineInfo))
+      identifiedWines.map((wineInfo: any) => processWineWithTimeout(wineInfo))
     );
 
     console.log(`[${requestId}] Analysis complete. Sending response.`);
