@@ -530,17 +530,11 @@ export default async function handler(
             score: ratingInfo.score,
             ratingSource: ratingInfo.source,
             summary: aiSummary || '',
-            additionalReviews: reviews.map(r => {
-              const reviewScore = typeof r === 'string' 
-                ? ratingInfo.score || 0
-                : r.rating || 0;
-                
-              return {
-                source: typeof r === 'string' ? 'Review' : r.source || 'Review',
-                rating: reviewScore,
-                review: typeof r === 'string' ? r : r.snippet || r.text || ''
-              };
-            })
+            additionalReviews: reviews.map(reviewString => ({ // reviewString is always a string
+              source: 'Review Snippet', // Source is just the snippet from search results
+              rating: null, // No individual rating available for snippets in this context
+              review: reviewString // The review text itself
+            }))
           };
         } catch (error) {
           console.error(`[${requestId}] Error processing wine ${wineInfo.wineName}:`, error);
