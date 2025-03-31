@@ -91,7 +91,7 @@ export default function Home() {
             review: data.summary || ''
           },
           additionalReviews: Array.isArray(data.additionalReviews) 
-            ? data.additionalReviews.map(review => {
+            ? data.additionalReviews.map((review: any) => {
                 if (typeof review === 'string') {
                   return { review: review };
                 }
