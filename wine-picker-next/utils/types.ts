@@ -2,15 +2,29 @@
 export interface Wine {
   name: string;
   winery?: string;
+  producer?: string;
   year?: string;
+  vintage?: string;
   region?: string;
   grapeVariety?: string;
+  varietal?: string;
   type?: string;
-  rawText?: string;
-  rating: WineRating;
-  webComments: string[];
-  userRating?: number;
-  pairingScores: Record<string, number>;
+  imageUrl?: string;
+  uploadedImageUrl?: string;
+  rating?: {
+    score: number;
+    source?: string;
+    review?: string;
+  };
+  additionalReviews?: Array<{
+    source?: string;
+    rating?: number;
+    review?: string;
+    text?: string;
+  }> | string[];
+  aiSummary?: string;
+  score?: number;
+  summary?: string;
 }
 
 // Wine rating details
@@ -35,8 +49,7 @@ export interface AnalyzeWineResponse {
 // Types for form state
 export interface UploadState {
   isLoading: boolean;
-  progress: number;
-  stage: string;
+  error: string | null;
 }
 
 // Preference settings

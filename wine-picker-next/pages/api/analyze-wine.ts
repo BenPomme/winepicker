@@ -2,6 +2,8 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 import { Wine, WineRating } from '@/types/wine';
 import { OpenAI } from 'openai';
+import { Configuration } from 'openai';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define response type
 type ApiResponse = {
@@ -11,6 +13,28 @@ type ApiResponse = {
     wines: Wine[];
   };
 };
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute window
+const MAX_REQUESTS_PER_WINDOW = 5; // Max 5 requests per minute
+
+// Simple in-memory storage for rate limiting
+// In production, use Redis or similar for distributed rate limiting
+const rateLimitStore: Record<string, { count: number, resetTime: number }> = {};
+
+// Clean up expired rate limit records periodically
+setInterval(() => {
+  const now = Date.now();
+  Object.keys(rateLimitStore).forEach(ip => {
+    if (rateLimitStore[ip].resetTime < now) {
+      delete rateLimitStore[ip];
+    }
+  });
+}, 5 * 60 * 1000); // Clean up every 5 minutes
 
 async function fetchWineImage(wineName: string, serperApiKey: string): Promise<string | null> {
   if (!wineName || !serperApiKey) return null;
@@ -56,67 +80,102 @@ Respond with only the summary sentence.`;
   }
 }
 
-async function analyzeImageWithOpenAI(imageBase64: string, apiKey: string): Promise<any[]> {
-  if (!imageBase64 || !apiKey) return [];
-  const openai = new OpenAI({ apiKey: apiKey });
+async function analyzeImageWithOpenAI(image: string) {
   try {
+    console.log("Calling OpenAI Vision API...");
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "user",
           content: [
-            { 
-              type: "text", 
-              text: "Analyze this wine image and extract information for ALL wine bottles visible. Return a JSON array: [{\"name\": \"name\", \"winery\": \"winery\", \"year\": \"year\", \"type\": \"type\", \"region\": \"region\", \"grape_variety\": \"variety\"}]. Omit unknown fields."
+            {
+              type: "text",
+              text: "Analyze this image and identify ALL wine bottles visible. For each wine, extract: name, vintage, producer, region, and varietal. Return a JSON array where each object represents a wine with these fields. If there are multiple wines, list all of them. Format: [{wine1}, {wine2}, ...]. Do not include markdown formatting or backticks."
             },
             {
               type: "image_url",
               image_url: {
-                url: `data:image/jpeg;base64,${imageBase64}`
+                url: `data:image/jpeg;base64,${image}`
               }
             }
           ]
         }
       ],
-      max_tokens: 1000,
-      temperature: 0.2
+      max_tokens: 500
     });
 
-    const content = response.choices[0]?.message?.content;
-    if (!content) {
-      console.error("OpenAI Vision response content is empty.");
-      return [];
+    // Get the raw content from the response
+    let content = response.choices[0].message.content || '[]';
+    console.log("Raw API response:", content);
+    
+    // Clean the content by removing markdown code blocks if present
+    if (content.includes("```")) {
+      content = content.replace(/```json\s*|\s*```/g, '');
     }
-
+    
+    // Try to parse the JSON
+    let parsedWines = [];
     try {
-      let parsedJson = JSON.parse(content);
-      if (parsedJson && Array.isArray(parsedJson.wines)) {
-        return parsedJson.wines;
-      } else if (parsedJson && Array.isArray(parsedJson)) {
-        return parsedJson;
+      // Check if the response is already an array
+      if (content.trim().startsWith('[')) {
+        parsedWines = JSON.parse(content);
       } else {
-        console.error("Parsed JSON from OpenAI is not in the expected array format:", parsedJson);
-        return [];
+        // If it's a single object, wrap it in an array
+        parsedWines = [JSON.parse(content)];
       }
     } catch (parseError) {
-      console.error("Failed to parse JSON from OpenAI Vision response:", parseError, "Raw content:", content);
-      let cleanContent = content.replace(/```json/g, '').replace(/```/g, '').trim();
-      try {
-        return JSON.parse(cleanContent);
-      } catch (finalParseError) {
-        console.error("Failed to parse even after cleaning:", finalParseError);
-        return [];
+      console.error("Error parsing JSON:", parseError);
+      
+      // Fallback: try to extract JSON objects using regex
+      const jsonPattern = /{[^{}]*({[^{}]*})*[^{}]*}/g;
+      const matches = content.match(jsonPattern);
+      
+      if (matches && matches.length > 0) {
+        for (const match of matches) {
+          try {
+            parsedWines.push(JSON.parse(match));
+          } catch (e) {
+            console.warn("Couldn't parse potential JSON object:", match);
+          }
+        }
+      }
+      
+      // If still no wines found, try another approach for finding wine information
+      if (parsedWines.length === 0) {
+        console.warn("Using fallback extraction method...");
+        
+        // Simple extraction of key-value pairs
+        const nameMatch = content.match(/name["']?:\s*["']([^"']+)["']/i);
+        const vintageMatch = content.match(/vintage["']?:\s*["']([^"']+)["']/i);
+        const producerMatch = content.match(/producer["']?:\s*["']([^"']+)["']/i);
+        const regionMatch = content.match(/region["']?:\s*["']([^"']+)["']/i);
+        const varietalMatch = content.match(/varietal["']?:\s*["']([^"']+)["']/i);
+        
+        if (nameMatch) {
+          parsedWines.push({
+            name: nameMatch[1],
+            vintage: vintageMatch ? vintageMatch[1] : '',
+            producer: producerMatch ? producerMatch[1] : '',
+            region: regionMatch ? regionMatch[1] : '',
+            varietal: varietalMatch ? varietalMatch[1] : ''
+          });
+        }
       }
     }
+    
+    console.log(`Identified ${parsedWines.length} wine(s)`, parsedWines);
+    
+    // Normalize the data
+    return parsedWines.map(wine => ({
+      wineName: wine.name || wine.wine_name || '',
+      vintage: wine.vintage || wine.year || '',
+      producer: wine.producer || wine.winery || '',
+      region: wine.region || '',
+      varietal: wine.varietal || wine.grape_variety || ''
+    }));
   } catch (error) {
-    console.error('Error calling OpenAI Vision API:', error instanceof Error ? error.message : error);
-    if (axios.isAxiosError(error)) {
-      console.error('Axios Error Details:', error.response?.data);
-      console.error('OpenAI API Response:', error.response?.data);
-      console.error('OpenAI API Status:', error.response?.status);
-      console.error('OpenAI API Headers:', error.response?.headers);
-    }
+    console.error("Error calling OpenAI Vision API:", error);
     return [];
   }
 }
@@ -140,144 +199,395 @@ async function getWineReviews(wineName: string, winery: string, year: string, ap
    }
 }
 
-function extractRatingFromReviews(reviews: string[]): { score: number, source: string, review?: string } {
-    let highestScore = 0;
-    let ratingSource = 'Reviews';
-    let bestReview = reviews.length > 0 ? reviews[0] : undefined;
+async function extractRatingFromReviews(reviews: string[]): Promise<{ score: number, source: string, review?: string }> {
+  // If no reviews, return default 0 rating
+  if (!reviews || reviews.length === 0) {
+    return { score: 0, source: 'No reviews available' };
+  }
 
-    const ratingPatterns = [
-        /(?:rating|score):?\s*([\d.]+)\s*(?:out of|\/)\s*(100)/i,
-        /(?:rating|score):?\s*([\d.]+)\s*(?:out of|\/)\s*(5)/i,
-        /(\d{2,3})\s*(?:pt|pts|points)/i,
-    ];
+  // Look for numbers followed by /100, /5, pts, or percentage
+  const ratingPatterns = [
+    /(\d{1,3})\s*\/\s*100/i,
+    /(\d{1,2})\s*\/\s*5/i,
+    /(\d{1,3})\s*pts/i,
+    /(\d{1,3})\s*points/i,
+    /(\d{1,3})\s*%/i,
+    /(\d{1,2})\s*stars/i,
+    /rated\s*(\d{1,3})/i
+  ];
 
-    reviews.forEach(review => {
-        for (const pattern of ratingPatterns) {
-            const match = review.match(pattern);
-            if (match) {
-                let score = parseFloat(match[1]);
-                const scale = match[2] ? parseInt(match[2]) : (match[0].includes('pt') ? 100 : 0);
+  let highestScore = 0;
+  let ratingSource = '';
+  let bestReview = '';
 
-                if (scale === 5) {
-                    score = score * 20;
-                } else if (scale === 0 && score <= 5) {
-                    score = score * 20;
-                }
-                 score = Math.max(0, Math.min(100, score));
-
-                if (score > highestScore) {
-                    highestScore = score;
-                    bestReview = review;
-                    if (review.toLowerCase().includes('wine spectator')) ratingSource = 'Wine Spectator';
-                    else if (review.toLowerCase().includes('vivino')) ratingSource = 'Vivino';
-                    else if (review.toLowerCase().includes('cellartracker')) ratingSource = 'CellarTracker';
-                }
-                break;
-            }
+  // Process each review looking for ratings
+  reviews.forEach(review => {
+    if (!review) return;
+    
+    let reviewText = typeof review === 'string' ? review : review.snippet || review.text || '';
+    let reviewSource = typeof review === 'string' ? 'Review' : review.source || 'Review';
+    
+    // Try each pattern to find ratings
+    for (const pattern of ratingPatterns) {
+      const match = reviewText.match(pattern);
+      if (match) {
+        let score = parseInt(match[1]);
+        
+        // Convert to 100-point scale
+        if (pattern.toString().includes('/5')) {
+          score = Math.round((score / 5) * 100);
+        } else if (pattern.toString().includes('stars')) {
+          score = Math.round((score / 5) * 100);
         }
+        
+        // Cap at 100
+        score = Math.min(score, 100);
+        
+        // Update if this is the highest score
+        if (score > highestScore) {
+          highestScore = score;
+          ratingSource = reviewSource;
+          bestReview = reviewText;
+        }
+      }
+    }
+  });
+
+  // If no ratings found in reviews, estimate a score based on sentiment
+  if (highestScore === 0 && reviews.length > 0) {
+    // Use OpenAI to analyze the sentiment of the reviews
+    return await estimateScoreFromReviews(reviews);
+  }
+
+  return { score: highestScore, source: ratingSource, review: bestReview };
+}
+
+async function estimateScoreFromReviews(reviews: string[]): Promise<{ score: number, source: string, review?: string }> {
+  if (!reviews || reviews.length === 0) {
+    return {
+      score: 75,
+      source: 'AI Estimated (Default)',
+      review: 'No reviews available for analysis'
+    };
+  }
+
+  const combinedReviews = reviews.join('\n\n').substring(0, 1500);
+  const prompt = `Analyze these wine reviews and estimate a score from 0-100 based on the sentiment and wine descriptors:
+
+${combinedReviews}
+
+Respond with a JSON object in this format:
+{
+- score: A number from 0-100 representing the quality of the wine based on the reviews
+- explanation: A brief explanation of why you assigned this score
+}`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 150,
+      temperature: 0.2
     });
 
-    return { score: Math.round(highestScore), source: ratingSource, review: bestReview };
+    const content = response.choices[0]?.message?.content || '';
+    
+    // Clean up the content to remove markdown formatting if present
+    let cleanedContent = content;
+    
+    // Remove markdown code block markers if present
+    if (content.includes("```json")) {
+      cleanedContent = content.replace(/```json\n|\n```/g, "");
+    } else if (content.includes("```")) {
+      cleanedContent = content.replace(/```\n|\n```/g, "");
+    }
+    
+    // Try to extract JSON using regex if it's still not valid
+    if (!cleanedContent.trim().startsWith('{')) {
+      const jsonMatch = cleanedContent.match(/{[\s\S]*}/);
+      if (jsonMatch) {
+        cleanedContent = jsonMatch[0];
+      }
+    }
+    
+    const result = JSON.parse(cleanedContent);
+
+    return {
+      score: result.score || 75,
+      source: 'AI Estimated',
+      review: result.explanation || combinedReviews.substring(0, 100) + '...'
+    };
+  } catch (error) {
+    console.error('Error estimating score from reviews:', error);
+    // Fallback to a reasonable score if AI estimation fails
+    return {
+      score: 75,
+      source: 'AI Estimated (Fallback)',
+      review: combinedReviews.substring(0, 100) + '...'
+    };
+  }
+}
+
+async function generateAIScoreAndSummary(reviews: Array<{ rating: number; text: string }>) {
+  const prompt = `Based on the following wine reviews, generate a score from 0-100 and a concise summary. Consider the ratings and overall sentiment from the reviews:
+
+${reviews.map(review => `Rating: ${review.rating}/100\nReview: ${review.text}`).join('\n\n')}
+
+Provide the response in JSON format with "score" and "summary" fields. The score should be a number between 0-100, and the summary should be 2-3 sentences highlighting the key points.`;
+
+  const response = await openai.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: prompt }],
+    max_tokens: 300
+  });
+
+  const content = response.choices[0].message.content || '{}';
+  
+  // Clean up the content to remove markdown formatting if present
+  let cleanedContent = content;
+  
+  // Remove markdown code block markers if present
+  if (content.includes("```json")) {
+    cleanedContent = content.replace(/```json\n|\n```/g, "");
+  } else if (content.includes("```")) {
+    cleanedContent = content.replace(/```\n|\n```/g, "");
+  }
+  
+  // Try to extract JSON using regex if it's still not valid
+  if (!cleanedContent.trim().startsWith('{')) {
+    const jsonMatch = cleanedContent.match(/{[\s\S]*}/);
+    if (jsonMatch) {
+      cleanedContent = jsonMatch[0];
+    }
+  }
+  
+  try {
+    const result = JSON.parse(cleanedContent);
+    return {
+      score: result.score || 0,
+      summary: result.summary || ''
+    };
+  } catch (error) {
+    console.error('Error parsing AI response:', error);
+    return {
+      score: 75,
+      summary: content.substring(0, 200) // Return part of the raw content as fallback
+    };
+  }
+}
+
+// Validate the base64 image
+function validateBase64Image(base64String: string): boolean {
+  // Check if it's a valid base64 string
+  if (!/^[A-Za-z0-9+/=]+$/.test(base64String)) {
+    return false;
+  }
+  
+  // Check size (limit to ~5MB)
+  if (base64String.length > 7 * 1024 * 1024) {
+    return false;
+  }
+  
+  return true;
 }
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<ApiResponse>
+  res: NextApiResponse
 ) {
+  // Generate a request ID for tracking
+  const requestId = uuidv4();
+  console.log(`[${requestId}] Request received`);
+  
+  // Check if method is allowed
   if (req.method !== 'POST') {
-    return res.status(405).json({ success: false, message: 'Method not allowed' });
+    return res.status(405).json({ 
+      success: false, 
+      message: 'Method not allowed',
+      requestId
+    });
   }
 
-  const { imageBase64 } = req.body;
-  const openAIApiKey = process.env.OPENAI_API_KEY;
+  // Apply rate limiting
+  const clientIp = req.headers['x-forwarded-for'] as string || 'unknown';
+  const now = Date.now();
+  
+  if (!rateLimitStore[clientIp]) {
+    rateLimitStore[clientIp] = {
+      count: 0,
+      resetTime: now + RATE_LIMIT_WINDOW
+    };
+  }
+  
+  const clientLimitData = rateLimitStore[clientIp];
+  
+  // Reset counter if window has passed
+  if (clientLimitData.resetTime < now) {
+    clientLimitData.count = 0;
+    clientLimitData.resetTime = now + RATE_LIMIT_WINDOW;
+  }
+  
+  // Increment counter and check limit
+  clientLimitData.count++;
+  
+  if (clientLimitData.count > MAX_REQUESTS_PER_WINDOW) {
+    return res.status(429).json({ 
+      success: false, 
+      message: 'Too many requests, please try again later',
+      requestId
+    });
+  }
+  
+  // Set headers for rate limit info
+  res.setHeader('X-RateLimit-Limit', MAX_REQUESTS_PER_WINDOW.toString());
+  res.setHeader('X-RateLimit-Remaining', (MAX_REQUESTS_PER_WINDOW - clientLimitData.count).toString());
+  res.setHeader('X-RateLimit-Reset', Math.ceil(clientLimitData.resetTime / 1000).toString());
+  res.setHeader('X-Request-ID', requestId);
+
+  // Get and validate input
+  const { image } = req.body;
   const serperApiKey = process.env.SERPER_API_KEY;
 
-  if (!imageBase64) {
-    return res.status(400).json({ success: false, message: 'No image provided' });
-  }
-  if (!openAIApiKey || !serperApiKey) {
-    console.error('API keys missing!');
-    return res.status(500).json({ success: false, message: 'Server configuration error: API keys missing.' });
-  }
-   console.log('API Keys available (masked):', {
-      openAI: openAIApiKey ? `sk-...${openAIApiKey.slice(-4)}` : 'Missing',
-      serper: serperApiKey ? `...${serperApiKey.slice(-4)}` : 'Missing'
+  if (!image) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'No image provided',
+      requestId
     });
+  }
+  
+  if (!validateBase64Image(image)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'Invalid image format or size',
+      requestId
+    });
+  }
+  
+  if (!serperApiKey) {
+    console.error(`[${requestId}] API keys missing!`);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'Server configuration error: API keys missing.',
+      requestId
+    });
+  }
+  
+  console.log(`[${requestId}] API Keys available (masked):`, {
+    serper: serperApiKey ? `...${serperApiKey.slice(-4)}` : 'Missing'
+  });
 
   try {
-    console.log('Step 1: Analyzing image with OpenAI Vision...');
-    const identifiedWines = await analyzeImageWithOpenAI(imageBase64, openAIApiKey);
-    if (!identifiedWines || identifiedWines.length === 0) {
-        console.log('No wines identified by OpenAI Vision.');
-        return res.status(404).json({ success: false, message: 'Could not identify any wines in the image.' });
+    console.log(`[${requestId}] Step 1: Analyzing image with OpenAI Vision...`);
+    const identifiedWines = await analyzeImageWithOpenAI(image);
+    if (identifiedWines.length === 0) {
+      console.log(`[${requestId}] No wine identified by OpenAI Vision.`);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Could not identify any wine in the image.',
+        requestId
+      });
     }
-     console.log(`Identified ${identifiedWines.length} potential wine(s).`);
+    console.log(`[${requestId}] Identified ${identifiedWines.length} wine(s)`);
 
-    const primaryWineInfo = identifiedWines[0];
-    const wineName = primaryWineInfo.name;
-     if (!wineName) {
-         console.log('Primary identified wine has no name.');
-         return res.status(400).json({ success: false, message: 'Identified wine data is incomplete (missing name).' });
-     }
-     console.log(`Processing primary wine: ${wineName}`);
+    // Process each wine in parallel with a timeout
+    const processWineWithTimeout = async (wineInfo: any, timeoutMs = 25000) => {
+      const timeoutPromise = new Promise<any>((_, reject) => {
+        setTimeout(() => reject(new Error('Processing timed out')), timeoutMs);
+      });
+      
+      const processPromise = (async () => {
+        try {
+          // Fetch reviews
+          console.log(`[${requestId}] Processing wine: ${wineInfo.wineName}`);
+          const reviews = await getWineReviews(
+            wineInfo.wineName,
+            wineInfo.producer || '',
+            wineInfo.vintage || '',
+            serperApiKey
+          );
+          console.log(`[${requestId}] Fetched ${reviews.length} review snippets for ${wineInfo.wineName}.`);
 
-    console.log('Step 2: Fetching reviews from Serper...');
-    const reviews = await getWineReviews(
-      wineName,
-      primaryWineInfo.winery || '',
-      primaryWineInfo.year || '',
-      serperApiKey
-    );
-     console.log(`Fetched ${reviews.length} review snippets.`);
+          // Extract rating
+          const ratingInfo = await extractRatingFromReviews(reviews);
+          console.log(`[${requestId}] Extracted Rating: ${ratingInfo.score}% for ${wineInfo.wineName}`);
 
-    console.log('Step 3: Extracting rating from reviews...');
-    const ratingInfo = extractRatingFromReviews(reviews);
-     console.log(`Extracted Rating: ${ratingInfo.score}% from ${ratingInfo.source}`);
+          // Generate AI summary
+          const aiSummary = await generateAISummary(reviews, process.env.OPENAI_API_KEY || '');
+          console.log(`[${requestId}] Generated AI Summary for ${wineInfo.wineName}: ${aiSummary || 'None'}`);
 
-    console.log('Step 4: Generating AI Summary...');
-    const aiSummary = await generateAISummary(reviews, openAIApiKey);
-     console.log(`Generated AI Summary: ${aiSummary || 'None'}`);
+          // Fetch wine image
+          const imageUrl = await fetchWineImage(wineInfo.wineName, serperApiKey);
+          console.log(`[${requestId}] Fetched Image URL for ${wineInfo.wineName}: ${imageUrl || 'None'}`);
 
-    console.log('Step 5: Fetching wine image...');
-    const imageUrl = await fetchWineImage(wineName, serperApiKey);
-     console.log(`Fetched Image URL: ${imageUrl || 'None'}`);
-
-    const finalWine: Wine = {
-      name: wineName,
-      winery: primaryWineInfo.winery || undefined,
-      year: primaryWineInfo.year || undefined,
-      region: primaryWineInfo.region || undefined,
-      grapeVariety: primaryWineInfo.grape_variety || primaryWineInfo.grapeVariety || undefined,
-      type: primaryWineInfo.type || undefined,
-      imageUrl: imageUrl || undefined,
-      rating: {
-        score: ratingInfo.score,
-        source: ratingInfo.source,
-        review: ratingInfo.review,
-        isPriceValue: false,
-      },
-      additionalReviews: reviews.filter(r => r !== ratingInfo.review),
-      aiSummary: aiSummary,
-      rawText: primaryWineInfo.raw_text || primaryWineInfo.rawText || undefined,
-      pairingScores: {
-          'meat': 7.0, 'fish': 7.0, 'sweet': 5.0, 'dry': 5.0,
-          'fruity': 5.0, 'light': 5.0, 'full-bodied': 5.0,
-       }
+          // Return comprehensive wine data
+          return {
+            name: wineInfo.wineName,
+            vintage: wineInfo.vintage || undefined,
+            producer: wineInfo.producer || undefined,
+            region: wineInfo.region || undefined,
+            varietal: wineInfo.varietal || undefined,
+            imageUrl: imageUrl || undefined,
+            score: ratingInfo.score,
+            ratingSource: ratingInfo.source,
+            summary: aiSummary || '',
+            additionalReviews: reviews.map(r => {
+              const reviewScore = typeof r === 'string' 
+                ? extractRatingFromReviews([r]).score || 0
+                : r.rating || 0;
+                
+              return {
+                source: typeof r === 'string' ? 'Review' : r.source || 'Review',
+                rating: reviewScore,
+                review: typeof r === 'string' ? r : r.snippet || r.text || ''
+              };
+            })
+          };
+        } catch (error) {
+          console.error(`[${requestId}] Error processing wine ${wineInfo.wineName}:`, error);
+          // Return partial data if there's an error
+          return {
+            name: wineInfo.wineName,
+            vintage: wineInfo.vintage || undefined,
+            producer: wineInfo.producer || undefined,
+            region: wineInfo.region || undefined,
+            varietal: wineInfo.varietal || undefined,
+            error: 'Failed to process complete wine data'
+          };
+        }
+      })();
+      
+      return Promise.race([processPromise, timeoutPromise]).catch(error => {
+        console.error(`[${requestId}] Wine processing timed out for ${wineInfo.wineName}:`, error);
+        return {
+          name: wineInfo.wineName,
+          vintage: wineInfo.vintage || undefined,
+          producer: wineInfo.producer || undefined,
+          region: wineInfo.region || undefined,
+          varietal: wineInfo.varietal || undefined,
+          error: 'Processing timed out'
+        };
+      });
     };
+    
+    const processedWines = await Promise.all(
+      identifiedWines.map(wineInfo => processWineWithTimeout(wineInfo))
+    );
 
-    console.log('Analysis complete. Sending response.');
-    return res.status(200).json({
-      success: true,
-      data: {
-         wines: [finalWine]
-      }
+    console.log(`[${requestId}] Analysis complete. Sending response.`);
+    return res.status(200).json({ 
+      success: true, 
+      wines: processedWines,
+      message: `Successfully analyzed ${processedWines.length} wine(s)`,
+      requestId
     });
-
   } catch (error) {
-    console.error('Unhandled error in API handler:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'An internal server error occurred during analysis.'
+    console.error(`[${requestId}] Error analyzing wine:`, error);
+    return res.status(500).json({ 
+      success: false, 
+      message: 'An internal server error occurred during analysis.',
+      error: error instanceof Error ? error.message : 'Unknown error',
+      requestId
     });
   }
 }
