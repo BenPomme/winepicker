@@ -115,7 +115,12 @@ const WineCard = ({ wine, isFeatured = false }: WineCardProps) => {
                     <div className="space-y-2">
                       {wine.additionalReviews.map((review, index) => (
                         <div key={index} className="bg-white/50 rounded-lg p-3">
-                          <p className="text-sm text-secondary">{review}</p>
+                          <p className="text-sm text-secondary">
+                            {typeof review === 'string' ? review : review.review || review.text || ''}
+                          </p>
+                          {typeof review === 'object' && review.source && (
+                            <p className="text-xs text-secondary mt-1">Source: {review.source}</p>
+                          )}
                         </div>
                       ))}
                     </div>
