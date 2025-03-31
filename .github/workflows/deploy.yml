@@ -1,4 +1,4 @@
-name: Deploy Next.js to GitHub Pages
+name: Deploy Next.js to GitHub Pages (Updated)
 
 on:
   # Runs on pushes targeting the default branch
@@ -29,11 +29,15 @@ jobs:
         working-directory: ./wine-picker-next
     steps:
       - name: Checkout
-        uses: actions/checkout@v4 # Use latest checkout action
+        uses: actions/checkout@v4
+      - name: Debug - List directory structure
+        run: ls -la
+      - name: Debug - Show package.json scripts
+        run: cat package.json | grep scripts -A 10
       - name: Setup Node
-        uses: actions/setup-node@v4 # Use latest setup-node action
+        uses: actions/setup-node@v4
         with:
-          node-version: "20" # Use a current LTS version
+          node-version: "20"
           cache: 'npm'
           cache-dependency-path: './wine-picker-next/package-lock.json'
       - name: Setup Pages
@@ -50,12 +54,13 @@ jobs:
         run: npm ci
       - name: Build with Next.js
         run: npm run build
+      - name: List output directory
+        run: ls -la ./out || echo "No out directory found"
       - name: Create .nojekyll file
         run: touch ./out/.nojekyll
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3 # Use latest upload artifact action
+        uses: actions/upload-pages-artifact@v3
         with:
-          # Upload the exported 'out' directory
           path: ./wine-picker-next/out
 
   # Deployment job
@@ -68,4 +73,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4 # Use latest deploy pages action 
+        uses: actions/deploy-pages@v4 
