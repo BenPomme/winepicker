@@ -11,131 +11,106 @@ export default function Home() {
   });
   const [wineDataList, setWineDataList] = useState<Wine[]>([]);
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = async (base64Image: string) => {
     try {
       setUploadState({ isLoading: true, error: null });
       setWineDataList([]); // Clear previous results
       
-      // Convert image to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
+      console.log("Sending image to API...");
       
-      reader.onload = async () => {
-        try {
-          const base64String = reader.result?.toString() || '';
-          // Extract the base64 part without the data URL prefix
-          const base64Image = base64String.split(',')[1];
-          
-          console.log("Sending image to API...");
-          
-          // Call the API to analyze the wine image
-          const response = await fetch('/api/analyze-wine', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+      // Call the API to analyze the wine image
+      const response = await fetch('/api/analyze-wine', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ image: base64Image }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Server error (${response.status}):`, errorText);
+        throw new Error(`Server responded with ${response.status}: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Wine analysis result:', data);
+      
+      // Store the uploaded image for display
+      const uploadedImageUrl = `data:image/jpeg;base64,${base64Image}`;
+      
+      // Format each wine and add to the state
+      if (data.wines && Array.isArray(data.wines)) {
+        const formattedWines = data.wines.map((wineData: any) => {
+          return {
+            name: wineData.name || '',
+            winery: wineData.producer || wineData.winery || '',
+            year: wineData.vintage || wineData.year || '',
+            region: wineData.region || '',
+            grapeVariety: wineData.varietal || wineData.grapeVariety || '',
+            type: wineData.type || '',
+            imageUrl: wineData.imageUrl || '',
+            uploadedImageUrl: uploadedImageUrl,
+            score: wineData.score || 0,
+            summary: wineData.summary || wineData.aiSummary || '',
+            aiSummary: wineData.aiSummary || wineData.summary || '',
+            rating: {
+              score: wineData.score || 0,
+              source: wineData.ratingSource || 'AI Analysis',
+              review: wineData.summary || ''
             },
-            body: JSON.stringify({ image: base64Image }),
-          });
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`Server error (${response.status}):`, errorText);
-            throw new Error(`Server responded with ${response.status}: ${errorText}`);
-          }
-          
-          const data = await response.json();
-          console.log('Wine analysis result:', data);
-          
-          // Store the uploaded image for display
-          const uploadedImageUrl = base64String;
-          
-          // Format each wine and add to the state
-          if (data.wines && Array.isArray(data.wines)) {
-            const formattedWines = data.wines.map((wineData: any) => {
-              return {
-                name: wineData.name || '',
-                winery: wineData.producer || wineData.winery || '',
-                year: wineData.vintage || wineData.year || '',
-                region: wineData.region || '',
-                grapeVariety: wineData.varietal || wineData.grapeVariety || '',
-                type: wineData.type || '',
-                imageUrl: wineData.imageUrl || '',
-                uploadedImageUrl: uploadedImageUrl,
-                score: wineData.score || 0,
-                summary: wineData.summary || wineData.aiSummary || '',
-                aiSummary: wineData.aiSummary || wineData.summary || '',
-                rating: {
-                  score: wineData.score || 0,
-                  source: wineData.ratingSource || 'AI Analysis',
-                  review: wineData.summary || ''
-                },
-                additionalReviews: Array.isArray(wineData.additionalReviews) 
-                  ? wineData.additionalReviews.map((review: any) => {
-                      if (typeof review === 'string') {
-                        return { review: review };
-                      }
-                      return review;
-                    })
-                  : []
-              };
-            });
-            
-            setWineDataList(formattedWines);
-          } else if (data.name) {
-            // Handle legacy single wine response
-            const formattedWine: Wine = {
-              name: data.name || '',
-              winery: data.producer || data.winery || '',
-              year: data.vintage || data.year || '',
-              region: data.region || '',
-              grapeVariety: data.varietal || data.grapeVariety || '',
-              type: data.type || '',
-              imageUrl: data.imageUrl || '',
-              uploadedImageUrl: data.uploadedImageUrl || uploadedImageUrl,
-              score: data.score || 0,
-              summary: data.summary || data.aiSummary || '',
-              aiSummary: data.aiSummary || data.summary || '',
-              rating: {
-                score: data.score || 0,
-                source: data.ratingSource || 'AI Analysis',
-                review: data.summary || ''
-              },
-              additionalReviews: Array.isArray(data.additionalReviews) 
-                ? data.additionalReviews.map(review => {
-                    if (typeof review === 'string') {
-                      return { review: review };
-                    }
-                    return review;
-                  })
-                : []
-            };
-            
-            setWineDataList([formattedWine]);
-          } else {
-            throw new Error('API returned no wine data');
-          }
-          
-          setUploadState({ isLoading: false, error: null });
-        } catch (error) {
-          console.error('Error processing image:', error);
-          setUploadState({ 
-            isLoading: false, 
-            error: error instanceof Error ? error.message : 'Failed to analyze wine image' 
-          });
-        }
-      };
-      
-      reader.onerror = () => {
-        setUploadState({ 
-          isLoading: false, 
-          error: 'Error reading the image file. Please try again.' 
+            additionalReviews: Array.isArray(wineData.additionalReviews) 
+              ? wineData.additionalReviews.map((review: any) => {
+                  if (typeof review === 'string') {
+                    return { review: review };
+                  }
+                  return review;
+                })
+              : []
+          };
         });
-      };
+        
+        setWineDataList(formattedWines);
+      } else if (data.name) {
+        // Handle legacy single wine response
+        const formattedWine: Wine = {
+          name: data.name || '',
+          winery: data.producer || data.winery || '',
+          year: data.vintage || data.year || '',
+          region: data.region || '',
+          grapeVariety: data.varietal || data.grapeVariety || '',
+          type: data.type || '',
+          imageUrl: data.imageUrl || '',
+          uploadedImageUrl: data.uploadedImageUrl || uploadedImageUrl,
+          score: data.score || 0,
+          summary: data.summary || data.aiSummary || '',
+          aiSummary: data.aiSummary || data.summary || '',
+          rating: {
+            score: data.score || 0,
+            source: data.ratingSource || 'AI Analysis',
+            review: data.summary || ''
+          },
+          additionalReviews: Array.isArray(data.additionalReviews) 
+            ? data.additionalReviews.map(review => {
+                if (typeof review === 'string') {
+                  return { review: review };
+                }
+                return review;
+              })
+            : []
+        };
+        
+        setWineDataList([formattedWine]);
+      } else {
+        throw new Error('API returned no wine data');
+      }
+      
+      setUploadState({ isLoading: false, error: null });
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error processing image:', error);
       setUploadState({ 
         isLoading: false, 
-        error: error instanceof Error ? error.message : 'Failed to upload image' 
+        error: error instanceof Error ? error.message : 'Failed to analyze wine image' 
       });
     }
   };
@@ -160,8 +135,8 @@ export default function Home() {
           
           <div className="max-w-4xl mx-auto">
             <ImageUploader 
-              onImageSelect={handleImageUpload} 
-              isProcessing={uploadState.isLoading} 
+              onUpload={handleImageUpload}
+              uploadState={uploadState}
             />
             
             {uploadState.error && (

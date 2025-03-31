@@ -20,14 +20,10 @@ const nextConfig = {
     // Add any webpack configurations here if needed
     return config
   },
-  output: 'export',
-  basePath: '/winepicker',
+  // Only use basePath in production
+  ...(process.env.NODE_ENV === 'production' ? { basePath: '/winepicker' } : {}),
   images: {
     unoptimized: true,
-  },
-  // Disable server-side features since we're using static export
-  experimental: {
-    appDir: false,
   },
 }
 

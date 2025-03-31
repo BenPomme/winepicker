@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { UploadState } from '../utils/types';
 
 interface ImageUploaderProps {
@@ -74,20 +74,6 @@ const ImageUploader = ({ onUpload, uploadState = { isLoading: false, error: null
         video: { facingMode: 'environment' } // Use back camera by default
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        // Wait for video to be ready
-        await new Promise((resolve) => {
-          if (videoRef.current) {
-            videoRef.current.onloadedmetadata = () => {
-              if (videoRef.current) {
-                videoRef.current.play();
-                resolve(true);
-              }
-            };
-          }
-        });
-      }
       setShowCamera(true);
       setCameraError(null);
     } catch (error) {
@@ -109,18 +95,27 @@ const ImageUploader = ({ onUpload, uploadState = { isLoading: false, error: null
   const capturePhoto = async () => {
     if (!videoRef.current) return;
 
+    const width = videoRef.current.videoWidth || videoRef.current.clientWidth;
+    const height = videoRef.current.videoHeight || videoRef.current.clientHeight;
+
+    if (!width || !height) {
+      console.error('Video dimensions not available');
+      return;
+    }
+
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    canvas.width = width;
+    canvas.height = height;
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    context.drawImage(videoRef.current, 0, 0);
+    context.drawImage(videoRef.current, 0, 0, width, height);
 
     // Convert to blob
-    const blob = await new Promise<Blob>((resolve) => {
+    const blob = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (blob) resolve(blob);
+        else reject(new Error('Canvas is empty'));
       }, 'image/jpeg', 0.8);
     });
 
@@ -131,6 +126,15 @@ const ImageUploader = ({ onUpload, uploadState = { isLoading: false, error: null
     await processFile(file);
     stopCamera();
   };
+
+  useEffect(() => {
+    if (showCamera && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current.play();
+      };
+    }
+  }, [showCamera]);
 
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -158,7 +162,9 @@ const ImageUploader = ({ onUpload, uploadState = { isLoading: false, error: null
             <video
               ref={videoRef}
               autoPlay
+              muted
               playsInline
+              onCanPlay={() => { videoRef.current?.play(); }}
               className="w-full rounded-lg"
             />
             <button
