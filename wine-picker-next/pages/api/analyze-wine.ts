@@ -1,8 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
-import { Wine, WineRating } from '@/types/wine';
+import { Wine, WineRating } from '@/utils/types';
 import { OpenAI } from 'openai';
-import { Configuration } from 'openai';
 import { v4 as uuidv4 } from 'uuid';
 
 // Define response type
@@ -167,7 +166,7 @@ async function analyzeImageWithOpenAI(image: string) {
     console.log(`Identified ${parsedWines.length} wine(s)`, parsedWines);
     
     // Normalize the data
-    return parsedWines.map(wine => ({
+    return parsedWines.map((wine: any) => ({
       wineName: wine.name || wine.wine_name || '',
       vintage: wine.vintage || wine.year || '',
       producer: wine.producer || wine.winery || '',
@@ -224,8 +223,8 @@ async function extractRatingFromReviews(reviews: string[]): Promise<{ score: num
   reviews.forEach(review => {
     if (!review) return;
     
-    let reviewText = typeof review === 'string' ? review : review.snippet || review.text || '';
-    let reviewSource = typeof review === 'string' ? 'Review' : review.source || 'Review';
+    let reviewText = typeof review === 'string' ? review : (review as any).snippet || (review as any).text || '';
+    let reviewSource = typeof review === 'string' ? 'Review' : (review as any).source || 'Review';
     
     // Try each pattern to find ratings
     for (const pattern of ratingPatterns) {

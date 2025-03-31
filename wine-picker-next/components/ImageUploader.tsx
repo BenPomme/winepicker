@@ -131,7 +131,7 @@ const ImageUploader = ({ onUpload, uploadState = { isLoading: false, error: null
     if (showCamera && videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
       videoRef.current.onloadedmetadata = () => {
-        videoRef.current.play();
+        videoRef.current?.play();
       };
     }
   }, [showCamera]);

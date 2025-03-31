@@ -49,8 +49,8 @@ const WineCard = ({ wine, isFeatured = false }: WineCardProps) => {
               {wine.name}
             </h3>
             <div className="flex items-center space-x-1">
-              <span className="text-primary font-semibold">{wine.rating.score}%</span>
-              <span className="text-secondary text-sm">({wine.rating.source})</span>
+              <span className="text-primary font-semibold">{wine.rating?.score ?? 0}%</span>
+              <span className="text-secondary text-sm">({wine.rating?.source || '-'})</span>
             </div>
           </div>
 
@@ -80,7 +80,7 @@ const WineCard = ({ wine, isFeatured = false }: WineCardProps) => {
 
           {/* Rating Stars */}
           <div className="flex items-center mb-3">
-            <RatingStars rating={wine.rating.score} size="md" />
+            <RatingStars rating={wine.rating?.score ?? 0} size="md" />
           </div>
 
           {/* AI Summary */}
@@ -93,12 +93,12 @@ const WineCard = ({ wine, isFeatured = false }: WineCardProps) => {
           )}
 
           {/* Reviews Section */}
-          {(wine.rating.review || (wine.additionalReviews && wine.additionalReviews.length > 0)) && (
+          {(wine.rating?.review || (wine.additionalReviews && wine.additionalReviews.length > 0)) && (
             <div className="space-y-3">
               {/* Main Review */}
-              {wine.rating.review && (
+              {wine.rating?.review && (
                 <div className="bg-white/50 rounded-lg p-3">
-                  <p className="text-sm text-secondary">{wine.rating.review}</p>
+                  <p className="text-sm text-secondary">{wine.rating?.review}</p>
                 </div>
               )}
 
