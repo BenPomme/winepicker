@@ -1,0 +1,138 @@
+{
+  "appName": "PickMyWine",
+  "upload": {
+    "title": "Upload a picture of bottles or a wine menu",
+    "dropzone": "Drag and drop an image here, or click to select a file",
+    "button": "Upload",
+    "processing": "Processing your image..."
+  },
+  "processing": {
+    "uploading": "Uploading",
+    "analyzing": "Analyzing",
+    "generating": "Generating",
+    "formatting": "Formatting",
+    "calculating": "Calculating...",
+    "timeRemainingSec": "{{seconds}} seconds",
+    "timeRemainingMin": "{{minutes}} minutes",
+    "elapsed": "Elapsed",
+    "remaining": "Remaining",
+    "error": "Processing Error",
+    "retry": "Retry",
+    "cancel": "Cancel"
+  },
+  "wineDetails": {
+    "name": "Name",
+    "producer": "Producer",
+    "vintage": "Vintage",
+    "region": "Region",
+    "varietal": "Grape Variety",
+    "score": "Score",
+    "summary": "Summary"
+  },
+  "preferences": {
+    "title": "Preferences",
+    "noBSMode": "No BS Mode",
+    "noBSModeDescription": "Get brutally honest wine ratings (0-100 scale) and crude language",
+    "language": "Language"
+  },
+  "results": {
+    "title": "Analysis Results",
+    "noWine": "No wine detected in the image",
+    "error": "Error analyzing wine",
+    "expertSummary": "Expert Summary",
+    "honestAssessment": "Honest Assessment"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "myList": {
+    "pageTitle": "My Wine List",
+    "description": "Your personal wine collection",
+    "subtitle": "Your personal collection of favorite wines",
+    "subtitleLoggedIn": "Your personal collection synchronized with your account",
+    "viewList": "My Wine List",
+    "add": "Add to My List",
+    "inList": "In My List",
+    "remove": "Remove",
+    "clearList": "Clear List",
+    "backHome": "Back to Search",
+    "findWines": "Find Wines",
+    "empty": "Your wine list is empty",
+    "emptyDescription": "Analyze wine bottle images and add wines to your personal list.",
+    "loading": "Loading your wine list...",
+    "confirmClear": "Are you sure you want to clear your entire wine list?",
+    "rateWine": "Rate this wine",
+    "yourRating": "Your Rating",
+    "fetchPrice": "Fetch Price",
+    "fetchingPrice": "Fetching...",
+    "estimatedPrice": "Est. Price",
+    "priceEstimate": "Price Estimate",
+    "priceEstimateLoading": "Finding current prices...",
+    "priceEstimateSuccess": "Price estimate updated",
+    "priceEstimateError": "Couldn't get price estimate",
+    "signInToRate": "Sign in to rate wines",
+    "signInToSave": "Sign in to save your wines",
+    "signInToSync": "Sign in to sync",
+    "ratingAdded": "Your rating has been saved",
+    "addNote": "Add Note",
+    "editNote": "Edit Note",
+    "saveNote": "Save Note",
+    "cancelNote": "Cancel",
+    "noteUpdated": "Note updated"
+  },
+  
+  "auth": {
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signInWithGoogle": "Sign in with Google",
+    "signInWithEmail": "Sign in with Email",
+    "signUp": "Sign Up",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "createAccount": "Create Account",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Display Name",
+    "user": "User",
+    "accountCreated": "Account created successfully!",
+    "resetPasswordSent": "Password reset email sent!",
+    "passwordRequired": "Password is required",
+    "emailRequired": "Email is required",
+    "displayNameRequired": "Display name is required",
+    "invalidEmail": "Invalid email address",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordsMustMatch": "Passwords must match",
+    "signInSuccess": "Signed in successfully!",
+    "signOutSuccess": "Signed out successfully!",
+    "signInError": "Error signing in",
+    "signUpError": "Error creating account",
+    "resetPasswordError": "Error sending reset email",
+    "alreadyHaveAccount": "Already have an account? Sign in"
+  },
+  
+  "profile": {
+    "settings": "Profile Settings",
+    "displayName": "Display Name",
+    "country": "Country",
+    "forPricing": "for wine pricing",
+    "currency": "Currency",
+    "currencyNote": "Currency is automatically set based on your country",
+    "language": "Language",
+    "saveSuccess": "Profile updated successfully!",
+    "errorSaving": "Error saving profile. Please try again."
+  },
+  
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "retry": "Retry",
+    "close": "Close"
+  }
+}

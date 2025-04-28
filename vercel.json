@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "functions": {
+    "pages/api/*.ts": {
+      "maxDuration": 60
+    }
+  },
+  "env": {},
+  "regions": ["iad1"],
+  "rewrites": [],
+  "headers": [],
+  "crons": [],
+  "git": {
+    "deploymentEnabled": {
+      "vercel-production": true,
+      "preview/openai-only": false,
+      "main": false,
+      "feature/*": false
+    }
+  }
+} 

@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import RTL styles */
+@import 'rtl.css';
+
+/* Import modern fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700&display=swap');
+
+/* Define heading font class */
+.heading-font {
+  font-family: 'Outfit', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 600;
+}
+
+:root {
+  /* Modern color palette inspired by Ready.so - softened colors */
+  --primary: #5a46e5;
+  --primary-light: #7864e8;
+  --primary-dark: #4935c8;
+  --accent: #fc4c02;
+  --accent-light: #fd6d34;
+  
+  /* Background colors */
+  --background: #ffffff;
+  --background-alt: #f8f9fc;
+  --background-dark: #1f1f2f;
+  --surface: #ffffff;
+  
+  /* Text colors */
+  --text-primary: #1a1523;
+  --text-secondary: #4a4858;
+  --text-muted: #908e9b;
+  
+  /* UI colors */
+  --secondary: #635e79;
+  --border: #e9e8f0;
+  --success: #00c48c;
+  --error: #ff6464;
+  --warning: #ffc107;
+}
+
+/* Apply smooth scrolling to all pages */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--text-primary);
+  background-color: var(--background);
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Modern UI Components */
+
+/* Glass effect */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-xl shadow-card p-6 transition duration-300;
+}
+
+.card:hover {
+  @apply shadow-card-hover;
+}
+
+.wine-card {
+  background-color: var(--surface);
+  border-radius: 1rem;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.04), 0 1px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.wine-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* Modern upload area */
+.upload-area {
+  border: 2px dashed var(--border);
+  background: var(--background-alt);
+  transition: all 0.3s ease;
+  padding: 2.5rem;
+  border-radius: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(106, 51, 248, 0.05) 0%, rgba(252, 76, 2, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.upload-area:hover {
+  border-color: var(--primary-light);
+}
+
+.upload-area:hover::before {
+  opacity: 1;
+}
+
+.progress-bar {
+  @apply h-2 bg-primary rounded-full transition-all duration-300;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background-alt);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Button styles */
+.btn {
+  @apply px-6 py-3 rounded-full font-medium transition-all duration-300 inline-flex items-center justify-center;
+}
+
+.btn-primary {
+  @apply bg-primary text-white shadow-button hover:shadow-button-hover hover:-translate-y-0.5;
+}
+
+.btn-secondary {
+  @apply bg-background-alt text-text-primary border border-border hover:bg-white hover:border-primary-light hover:-translate-y-0.5;
+}
+
+.btn-accent {
+  @apply bg-accent text-white shadow-button hover:shadow-button-hover hover:-translate-y-0.5;
+}
+
+.btn-sm {
+  @apply px-4 py-2 text-sm;
+}
+
+.btn-lg {
+  @apply px-8 py-4 text-lg;
+}
+
+/* Input styles */
+.input {
+  @apply px-4 py-3 rounded-xl border border-border bg-white focus:outline-none focus:ring-2 focus:ring-opacity-20 focus:ring-primary focus:border-primary transition duration-200;
+}
+
+/* Animation classes are defined in tailwind.config.js */
+
+/* Delay utilities */
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply text-transparent bg-clip-text;
+  background-image: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+}
+
+/* Container with nice padding */
+.container-padded {
+  @apply container mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* Section spacing */
+.section {
+  @apply py-16 md:py-24;
+}
+
+.section-lg {
+  @apply py-24 md:py-32;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-primary bg-opacity-10 text-primary;
+}
+
+.badge-accent {
+  @apply bg-accent bg-opacity-10 text-accent;
+} 

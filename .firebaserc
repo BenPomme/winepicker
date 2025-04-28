@@ -1,0 +1,21 @@
+{
+  "projects": {
+    "default": "winepicker-63daa"
+  },
+  "targets": {
+    "winepicker-63daa": {
+      "hosting": {
+        "default": [
+          "winepicker-63daa"
+        ],
+        "production": [
+          "pickmywine-live"
+        ],
+        "pickmywine-live": [
+          "production"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

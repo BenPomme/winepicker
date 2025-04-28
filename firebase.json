@@ -1,0 +1,100 @@
+{
+  "hosting": [
+    {
+      "target": "default",
+      "public": "out",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "headers": [
+        {
+          "source": "**/*.@(json)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=0, must-revalidate"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/api/analyze-wine",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "/api/analyze-wine-openai",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "/api/get-analysis-result",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "/api/**",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ],
+      "redirects": []
+    },
+    {
+      "target": "production",
+      "public": "out",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "cleanUrls": true,
+      "trailingSlash": false,
+      "headers": [
+        {
+          "source": "**/*.@(json)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=0, must-revalidate"
+            }
+          ]
+        }
+      ],
+      "rewrites": [
+        {
+          "source": "/api/analyze-wine",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "/api/analyze-wine-openai",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "/api/get-analysis-result",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "/api/**",
+          "function": "nextApiHandler"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+      ]
+    }
+  ],
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  }
+}

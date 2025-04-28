@@ -1,0 +1,36 @@
+{
+  "appName": "PickMyWine",
+  "upload": {
+    "title": "Télécharger une photo de bouteilles ou un menu de vin",
+    "dropzone": "Glissez et déposez une image ici, ou cliquez pour sélectionner un fichier",
+    "button": "Télécharger",
+    "processing": "Traitement de votre image..."
+  },
+  "wineDetails": {
+    "name": "Nom",
+    "producer": "Producteur",
+    "vintage": "Millésime",
+    "region": "Région",
+    "varietal": "Cépage",
+    "score": "Note",
+    "summary": "Résumé"
+  },
+  "preferences": {
+    "title": "Préférences",
+    "noBSMode": "Mode Sans Filtre",
+    "noBSModeDescription": "Obtenez des évaluations brutalement honnêtes (échelle 0-100) et un langage cru",
+    "language": "Langue"
+  },
+  "results": {
+    "title": "Résultats d'Analyse",
+    "noWine": "Aucun vin détecté dans l'image",
+    "error": "Erreur lors de l'analyse du vin",
+    "expertSummary": "Résumé d'Expert",
+    "honestAssessment": "Évaluation Honnête"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "about": "À Propos",
+    "contact": "Contact"
+  }
+}

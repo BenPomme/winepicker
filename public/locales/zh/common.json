@@ -1,0 +1,36 @@
+{
+  "appName": "PickMyWine",
+  "upload": {
+    "title": "上传葡萄酒瓶或菜单的照片",
+    "dropzone": "将图片拖放到此处，或点击选择文件",
+    "button": "上传",
+    "processing": "正在处理您的图片..."
+  },
+  "wineDetails": {
+    "name": "名称",
+    "producer": "生产商",
+    "vintage": "年份",
+    "region": "产区",
+    "varietal": "葡萄品种",
+    "score": "评分",
+    "summary": "摘要"
+  },
+  "preferences": {
+    "title": "偏好设置",
+    "noBSMode": "直言模式",
+    "noBSModeDescription": "获取残酷诚实的葡萄酒评分（0-100分）和直率的语言",
+    "language": "语言"
+  },
+  "results": {
+    "title": "分析结果",
+    "noWine": "图片中未检测到葡萄酒",
+    "error": "分析葡萄酒时出错",
+    "expertSummary": "专家摘要",
+    "honestAssessment": "诚实评价"
+  },
+  "navigation": {
+    "home": "主页",
+    "about": "关于",
+    "contact": "联系我们"
+  }
+}

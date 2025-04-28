@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "MyWine",
+    "slug": "mywine",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./ios-app/assets/icons/icon.png",
+    "splash": {
+      "image": "./ios-app/assets/icons/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#8A2BE2"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mywine.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./ios-app/assets/icons/adaptive-icon.png",
+        "backgroundColor": "#8A2BE2"
+      },
+      "package": "com.mywine.app"
+    },
+    "web": {
+      "favicon": "./public/favicon.ico"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "mywine-app"
+      }
+    }
+  }
+}

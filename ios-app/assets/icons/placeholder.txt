@@ -1,0 +1,8 @@
+App icons will be placed here following Apple's size guidelines:
+
+- App icon (1024x1024)
+- Spotlight icon (80x80)
+- Settings icon (58x58)
+- Notification icon (40x40)
+
+These will need to be created from the existing web app icon.

@@ -1,0 +1,10 @@
+# Large JavaScript files
+.*/typescript.js
+.*/tsc.js
+# Build outputs
+.next/
+out/
+# Node modules
+node_modules/
+# Webpack cache
+.*\.pack.gz

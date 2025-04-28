@@ -1,0 +1,36 @@
+{
+  "appName": "PickMyWine",
+  "upload": {
+    "title": "تحميل صورة للزجاجات أو قائمة النبيذ",
+    "dropzone": "اسحب وأفلت صورة هنا، أو انقر لاختيار ملف",
+    "button": "تحميل",
+    "processing": "جارٍ معالجة صورتك..."
+  },
+  "wineDetails": {
+    "name": "الاسم",
+    "producer": "المنتج",
+    "vintage": "العام",
+    "region": "المنطقة",
+    "varietal": "نوع العنب",
+    "score": "التقييم",
+    "summary": "الملخص"
+  },
+  "preferences": {
+    "title": "التفضيلات",
+    "noBSMode": "وضع الصراحة",
+    "noBSModeDescription": "احصل على تقييمات صريحة للنبيذ (مقياس 0-100) ولغة مباشرة",
+    "language": "اللغة"
+  },
+  "results": {
+    "title": "نتائج التحليل",
+    "noWine": "لم يتم اكتشاف نبيذ في الصورة",
+    "error": "خطأ في تحليل النبيذ",
+    "expertSummary": "ملخص الخبير",
+    "honestAssessment": "تقييم صادق"
+  },
+  "navigation": {
+    "home": "الرئيسية",
+    "about": "من نحن",
+    "contact": "اتصل بنا"
+  }
+}
