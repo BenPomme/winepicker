@@ -1,0 +1,64 @@
+<!DOCTYPE html><html><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width"/><meta name="next-head-count" content="2"/><link rel="preload" href="/_next/static/css/fd19a069fb66f562.css" as="style"/><link rel="stylesheet" href="/_next/static/css/fd19a069fb66f562.css" data-n-g=""/><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/_next/static/chunks/webpack-9657a207feb48bd4.js" defer=""></script><script src="/_next/static/chunks/framework-64ad27b21261a9ce.js" defer=""></script><script src="/_next/static/chunks/main-81b5ab14ed592f7b.js" defer=""></script><script src="/_next/static/chunks/pages/_app-cd7f41408fe45c97.js" defer=""></script><script src="/_next/static/chunks/716-f4fcc096e9f94593.js" defer=""></script><script src="/_next/static/chunks/138-a22945028daa7793.js" defer=""></script><script src="/_next/static/chunks/pages/index-89ba03e308f8292c.js" defer=""></script><script src="/_next/static/build-20250430T114203778Z/_buildManifest.js" defer=""></script><script src="/_next/static/build-20250430T114203778Z/_ssgManifest.js" defer=""></script></head><body><div id="__next"></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"_nextI18Next":{"initialI18nStore":{"en":{"common":{"appName":"PickMyWine","upload":{"title":"Upload a picture of bottles or a wine menu","dropzone":"Drag and drop an image here, or click to select a file","button":"Upload","processing":"Processing your image..."},"processing":{"uploading":"Uploading","analyzing":"Analyzing","generating":"Generating","formatting":"Formatting","calculating":"Calculating...","timeRemainingSec":"{{seconds}} seconds","timeRemainingMin":"{{minutes}} minutes","elapsed":"Elapsed","remaining":"Remaining","error":"Processing Error","retry":"Retry","cancel":"Cancel"},"wineDetails":{"name":"Name","producer":"Producer","vintage":"Vintage","region":"Region","varietal":"Grape Variety","score":"Score","summary":"Summary"},"preferences":{"title":"Preferences","noBSMode":"No BS Mode","noBSModeDescription":"Get brutally honest wine ratings (0-100 scale) and crude language","language":"Language"},"results":{"title":"Analysis Results","noWine":"No wine detected in the image","error":"Error analyzing wine","expertSummary":"Expert Summary","honestAssessment":"Honest Assessment"},"navigation":{"home":"Home","about":"About","contact":"Contact"},"myList":{"pageTitle":"My Wine List","description":"Your personal wine collection","subtitle":"Your personal collection of favorite wines","subtitleLoggedIn":"Your personal collection synchronized with your account","viewList":"My Wine List","add":"Add to My List","inList":"In My List","remove":"Remove","clearList":"Clear List","backHome":"Back to Search","findWines":"Find Wines","empty":"Your wine list is empty","emptyDescription":"Analyze wine bottle images and add wines to your personal list.","loading":"Loading your wine list...","confirmClear":"Are you sure you want to clear your entire wine list?","rateWine":"Rate this wine","yourRating":"Your Rating","fetchPrice":"Fetch Price","fetchingPrice":"Fetching...","estimatedPrice":"Est. Price","priceEstimate":"Price Estimate","priceEstimateLoading":"Finding current prices...","priceEstimateSuccess":"Price estimate updated","priceEstimateError":"Couldn't get price estimate","signInToRate":"Sign in to rate wines","signInToSave":"Sign in to save your wines","signInToSync":"Sign in to sync","ratingAdded":"Your rating has been saved","addNote":"Add Note","editNote":"Edit Note","saveNote":"Save Note","cancelNote":"Cancel","noteUpdated":"Note updated"},"auth":{"signIn":"Sign In","signOut":"Sign Out","signInWithGoogle":"Sign in with Google","signInWithEmail":"Sign in with Email","signUp":"Sign Up","forgotPassword":"Forgot Password?","resetPassword":"Reset Password","createAccount":"Create Account","email":"Email","password":"Password","displayName":"Display Name","user":"User","accountCreated":"Account created successfully!","resetPasswordSent":"Password reset email sent!","passwordRequired":"Password is required","emailRequired":"Email is required","displayNameRequired":"Display name is required","invalidEmail":"Invalid email address","passwordTooShort":"Password must be at least 6 characters","passwordsMustMatch":"Passwords must match","signInSuccess":"Signed in successfully!","signOutSuccess":"Signed out successfully!","signInError":"Error signing in","signUpError":"Error creating account","resetPasswordError":"Error sending reset email","alreadyHaveAccount":"Already have an account? Sign in"},"profile":{"settings":"Profile Settings","displayName":"Display Name","country":"Country","forPricing":"for wine pricing","currency":"Currency","currencyNote":"Currency is automatically set based on your country","language":"Language","saveSuccess":"Profile updated successfully!","errorSaving":"Error saving profile. Please try again."},"common":{"save":"Save","cancel":"Cancel","edit":"Edit","delete":"Delete","loading":"Loading...","error":"Error","success":"Success","retry":"Retry","close":"Close"}}}},"initialLocale":"en","ns":["common"],"userConfig":{"i18n":{"defaultLocale":"en","locales":["en","fr","zh","ar"],"localeDetection":true},"localePath":"/Users/benjamin.pommeraud/mywine-1/public/locales","reloadOnPrerender":false,"default":{"i18n":{"defaultLocale":"en","locales":["en","fr","zh","ar"],"localeDetection":true},"localePath":"/Users/benjamin.pommeraud/mywine-1/public/locales","reloadOnPrerender":false}}},"_clientSideTranslations":true},"__N_SSG":true},"page":"/","query":{},"buildId":"build-20250430T114203778Z","isFallback":false,"gsp":true,"scriptLoader":[]}</script>
+<script>
+// Detect locale based on path
+function detectLocale() {
+  const path = window.location.pathname;
+  const pathSegments = path.split('/').filter(Boolean);
+  const validLocales = ['en', 'fr', 'zh', 'ar'];
+  
+  // If first path segment is a valid locale, use it
+  if (pathSegments.length > 0 && validLocales.includes(pathSegments[0])) {
+    return pathSegments[0];
+  }
+  
+  // Default to English
+  return 'en';
+}
+
+// Update the __NEXT_DATA__ script with the correct locale
+function updateNextData(locale) {
+  const nextDataScript = document.getElementById('__NEXT_DATA__');
+  if (!nextDataScript) return;
+  
+  try {
+    const data = JSON.parse(nextDataScript.textContent);
+    
+    // Update locale in all necessary places
+    if (data.props?.pageProps?._nextI18Next) {
+      data.props.pageProps._nextI18Next.initialLocale = locale;
+    }
+    
+    nextDataScript.textContent = JSON.stringify(data);
+    console.log(`Updated __NEXT_DATA__ with locale: ${locale}`);
+  } catch (error) {
+    console.error('Error updating __NEXT_DATA__:', error);
+  }
+}
+
+// Set direction for RTL languages
+function setDirection(locale) {
+  if (locale === 'ar') {
+    document.documentElement.dir = 'rtl';
+    document.documentElement.lang = 'ar';
+    document.body && document.body.classList.add('rtl');
+  } else {
+    document.documentElement.dir = 'ltr';
+    document.documentElement.lang = locale;
+    document.body && document.body.classList.remove('rtl');
+  }
+}
+
+// Detect and set locale before page renders
+const detectedLocale = detectLocale();
+updateNextData(detectedLocale);
+setDirection(detectedLocale);
+
+// Redirect to locale path if not already there
+if (window.location.pathname === '/' || window.location.pathname === '') {
+  window.location.replace(`/${detectedLocale}/`);
+}
+</script>
+<script src="/fix-language.js"></script>
+<script src="/fix-locale.js"></script>
+<script src="/force-reload.js"></script>
+</body></html>

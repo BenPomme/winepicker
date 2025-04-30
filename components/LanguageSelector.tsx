@@ -27,48 +27,37 @@ export default function LanguageSelector() {
   }, [currentLanguage])
 
   const changeLanguage = (newLocale: string) => {
-    // For static exports, we need to handle locale change differently
-    const currentUrl = window.location.href
-    const baseUrl = window.location.origin
-    const currentPath = window.location.pathname
-    
-    // Check if the URL already has a locale part
-    const pathSegments = currentPath.split('/').filter(Boolean)
-    const currentLocale = locale || 'en'
-    const hasLocaleSegment = pathSegments.length > 0 && ['en', 'fr', 'zh', 'ar'].includes(pathSegments[0])
-    
-    // Calculate the path without the locale segment if it exists
-    let pathWithoutLocale = currentPath
-    if (hasLocaleSegment) {
-      pathWithoutLocale = '/' + pathSegments.slice(1).join('/')
+    try {
+      console.log(`Changing language from ${locale} to ${newLocale}`)
+      
+      // More robust approach that works across environments
+      const currentPath = window.location.pathname
+      // Remove existing language prefix if present
+      let pathWithoutLang = currentPath
+      
+      // Check if there's a language code at the start of the path
+      const langRegex = /^\/(en|fr|zh|ar)\//
+      if (langRegex.test(currentPath)) {
+        pathWithoutLang = currentPath.replace(langRegex, '/')
+      }
+      
+      // Ensure path starts with slash
+      if (!pathWithoutLang.startsWith('/')) {
+        pathWithoutLang = '/' + pathWithoutLang
+      }
+      
+      // Create new path with selected language
+      const newPath = `/${newLocale}${pathWithoutLang === '/' ? '/' : pathWithoutLang}`
+      
+      console.log(`Navigating to: ${newPath}`)
+      // Use relative URLs to avoid domain issues
+      window.location.href = newPath
+      setIsOpen(false)
+    } catch (error) {
+      console.error('Error changing language:', error)
+      // Fallback using relative URL
+      window.location.href = `/${newLocale}/`
     }
-    
-    // Preserve query parameters
-    const queryString = window.location.search
-    
-    // Create the new URL with the correct locale segment
-    let newUrl
-    if (pathWithoutLocale === '/') {
-      // Root path special case
-      newUrl = `${baseUrl}/${newLocale}/`
-    } else {
-      // Regular path
-      newUrl = `${baseUrl}/${newLocale}${pathWithoutLocale}${queryString}`
-    }
-    
-    console.log('Language change:', { 
-      from: currentLocale, 
-      to: newLocale, 
-      currentPath,
-      pathSegments,
-      hasLocaleSegment,
-      pathWithoutLocale,
-      newUrl
-    })
-    
-    // Navigate to the new URL
-    window.location.href = newUrl
-    setIsOpen(false)
   }
 
   return (

@@ -8,8 +8,8 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "cleanUrls": true,
-      "trailingSlash": false,
+      "cleanUrls": false,
+      "trailingSlash": true,
       "headers": [
         {
           "source": "**/*.@(json)",
@@ -37,13 +37,35 @@
         {
           "source": "/api/**",
           "function": "nextApiHandler"
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
         }
       ],
-      "redirects": []
+      "redirects": [
+        {
+          "source": "/",
+          "destination": "/en/",
+          "type": 302
+        },
+        {
+          "source": "/en",
+          "destination": "/en/",
+          "type": 301
+        },
+        {
+          "source": "/fr",
+          "destination": "/fr/",
+          "type": 301
+        },
+        {
+          "source": "/zh",
+          "destination": "/zh/",
+          "type": 301
+        },
+        {
+          "source": "/ar",
+          "destination": "/ar/",
+          "type": 301
+        }
+      ]
     },
     {
       "target": "production",
@@ -53,8 +75,8 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "cleanUrls": true,
-      "trailingSlash": false,
+      "cleanUrls": false,
+      "trailingSlash": true,
       "headers": [
         {
           "source": "**/*.@(json)",
@@ -82,10 +104,33 @@
         {
           "source": "/api/**",
           "function": "nextApiHandler"
+        }
+      ],
+      "redirects": [
+        {
+          "source": "/",
+          "destination": "/en/",
+          "type": 302
         },
         {
-          "source": "**",
-          "destination": "/index.html"
+          "source": "/en",
+          "destination": "/en/",
+          "type": 301
+        },
+        {
+          "source": "/fr",
+          "destination": "/fr/",
+          "type": 301
+        },
+        {
+          "source": "/zh",
+          "destination": "/zh/",
+          "type": 301
+        },
+        {
+          "source": "/ar",
+          "destination": "/ar/",
+          "type": 301
         }
       ]
     }
