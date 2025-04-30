@@ -1,0 +1,30 @@
+{
+  "hosting": [
+    {
+      "target": "staging",
+      "public": "build/web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        { "source": "/:locale", "destination": "/index.html" },
+        { "source": "/:locale/**", "destination": "/index.html" }
+      ]
+    },
+    {
+      "target": "production",
+      "public": "build/web",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        { "source": "/:locale", "destination": "/index.html" },
+        { "source": "/:locale/**", "destination": "/index.html" }
+      ]
+    }
+  ]
+} 

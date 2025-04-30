@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "staging": "winepicker-63daa",
+    "production": "pickmywine-live"
+  }
+} 
