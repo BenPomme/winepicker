@@ -1,6 +1,15 @@
 {
   "projects": {
     "staging": "winepicker-63daa",
-    "production": "pick-my-wine-2c853"
-  }
-} 
+    "production": "winepicker-63daa"
+  },
+  "targets": {
+    "winepicker-63daa": {
+      "hosting": {
+        "staging": ["winepicker-63daa"],
+        "production": ["pickmywine-live"]
+      }
+    }
+  },
+  "etags": {}
+}
