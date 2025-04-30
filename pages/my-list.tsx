@@ -555,11 +555,23 @@ function MyWineList() {
 }
 
 export const getStaticProps = async ({ locale = 'en' }: { locale?: string }) => {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ['common'])),
-    },
-  };
+  try {
+    return {
+      props: {
+        ...(await serverSideTranslations('en', ['common'])),
+        // Add a fallback flag so the client knows to replace translations
+        _clientSideTranslations: true,
+      },
+    };
+  } catch (e) {
+    console.error('Error loading translations in getStaticProps:', e);
+    // Return minimal props in case of error
+    return {
+      props: {
+        _clientSideTranslations: true
+      }
+    };
+  }
 };
 
 export default MyWineList;
