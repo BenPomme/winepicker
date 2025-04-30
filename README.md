@@ -5,9 +5,13 @@ AI-powered wine identification and rating app using OpenAI GPT-4o.
 ## Deployment Information
 
 - **Production Site**: [MyWine App](https://pickmywine-live.web.app)
+- **Staging Site**: [MyWine Staging](https://winepicker-63daa.web.app)
+- **Reference Build**: 2c23f0 (April 2025)
 - **Latest Update**: April 2025 - Firebase deployment with GPT-4o API
 - **Features**: Direct OpenAI integration with Firebase Functions
 - **Documentation**: See the [docs](./docs) directory for detailed information
+- **Deployment Guide**: [Deployment Documentation](./docs/DEPLOYMENT.md)
+- **Cleanup Report**: [Cleanup Summary](./CLEANUP_SUMMARY.md)
 
 ## Features
 
@@ -65,11 +69,17 @@ AI-powered wine identification and rating app using OpenAI GPT-4o.
 
 For deployment instructions, see [Deployment Guide](./docs/DEPLOYMENT.md).
 
-### Quick Firebase Deployment
+### Firebase Deployment
 
 ```bash
-# Deploy to Firebase
-./deploy-firebase.sh
+# Deploy to staging (recommended first step)
+./deploy-consolidated.sh staging
+
+# Deploy to production
+./deploy-consolidated.sh production
+
+# Best method: Clone staging to production (recommended for reliability)
+./deploy-consolidated.sh clone
 ```
 
 ## Project Structure
