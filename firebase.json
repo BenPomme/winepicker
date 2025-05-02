@@ -37,6 +37,10 @@
         {
           "source": "/api/**",
           "function": "nextApiHandler"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
         }
       ],
       "redirects": [
@@ -76,7 +80,7 @@
         "**/node_modules/**"
       ],
       "cleanUrls": false,
-      "trailingSlash": true,
+      "trailingSlash": false,
       "headers": [
         {
           "source": "**/*.@(json)",
@@ -104,6 +108,10 @@
         {
           "source": "/api/**",
           "function": "nextApiHandler"
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
         }
       ],
       "redirects": [
