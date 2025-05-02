@@ -46,6 +46,16 @@ for locale in en fr zh ar; do
     echo -e "${YELLOW}Creating $locale/index.html...${NC}"
     cp out/index.html "out/$locale/index.html"
   fi
+  
+  # Create my-list directory and copy files
+  mkdir -p "out/$locale/my-list"
+  if [ -f "out/my-list/index.html" ]; then
+    echo -e "${YELLOW}Creating $locale/my-list/index.html...${NC}"
+    cp out/my-list/index.html "out/$locale/my-list/index.html"
+  elif [ -f "out/my-list.html" ]; then
+    echo -e "${YELLOW}Creating $locale/my-list/index.html from my-list.html...${NC}"
+    cp out/my-list.html "out/$locale/my-list/index.html"
+  fi
 done
 
 # Create a more robust fix-redirect.js script
@@ -125,8 +135,24 @@ cat > firebase.staging.json << 'EOF'
     "trailingSlash": true,
     "rewrites": [
       {
+        "source": "/api/analyze-wine",
+        "function": "nextApiHandler"
+      },
+      {
+        "source": "/api/analyze-wine-openai",
+        "function": "nextApiHandler"
+      },
+      {
+        "source": "/api/get-analysis-result",
+        "function": "nextApiHandler"
+      },
+      {
         "source": "/api/**",
         "function": "nextApiHandler"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
       }
     ],
     "redirects": [
@@ -134,6 +160,26 @@ cat > firebase.staging.json << 'EOF'
         "source": "/",
         "destination": "/en/",
         "type": 302
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|jpg|jpeg|gif|png|svg|webp)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(html|json)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
       }
     ]
   }
