@@ -37,10 +37,6 @@
         {
           "source": "/api/**",
           "function": "nextApiHandler"
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
         }
       ],
       "redirects": [
@@ -108,10 +104,6 @@
         {
           "source": "/api/**",
           "function": "nextApiHandler"
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
         }
       ],
       "redirects": [

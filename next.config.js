@@ -48,13 +48,20 @@ const nextConfig = {
   // Specify asset prefixes for static files
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   
+  // Inject scripts to handle redirects
+  experimental: {
+    optimizeCss: true,
+    nextScriptWorkers: true,
+  },
+  
   // Import i18n configuration from next-i18next.config.js
   // Note: For static export, we use a combination of:
   // 1. Sub-path routing (/en/page, /fr/page, etc.)
   // 2. The trailingSlash option to ensure proper static file loading
+  // 3. This MUST be set to true for i18n static exports
   trailingSlash: true,
   
-  // Custom export logic for handling i18n
+  // Simplified export logic for handling i18n
   exportPathMap: async function (defaultPathMap, { dev, dir, outDir, distDir, buildId }) {
     const pathMap = {};
     const locales = ['en', 'fr', 'zh', 'ar'];
@@ -75,67 +82,17 @@ const nextConfig = {
       }
       
       // Add the non-localized path for compatibility
-      // This ensures each path is available without a locale prefix too
       pathMap[path] = { 
         ...config
       };
       
       // Create localized paths for all pages
       locales.forEach(locale => {
-        // Special case for index page
-        if (path === '/') {
-          // Root locale path (e.g., /en)
-          pathMap[`/${locale}`] = { 
-            ...config,
-            locale
-          };
-          
-          // Root locale path with trailing slash (e.g., /en/)
-          pathMap[`/${locale}/`] = { 
-            ...config,
-            locale
-          };
-          
-          // Create index.html directly in each locale folder for hosting platforms
-          pathMap[`/${locale}/index`] = { 
-            ...config,
-            locale
-          };
-        } 
-        // Handle app page special case - ensure it works in all locales
-        else if (path === '/app') {
-          pathMap[`/${locale}${path}`] = { 
-            ...config,
-            locale
-          };
-          
-          // Also create with trailing slash
-          pathMap[`/${locale}${path}/`] = { 
-            ...config,
-            locale
-          };
-          
-          // For Firebase hosting compatibility
-          pathMap[`/${locale}${path}/index`] = { 
-            ...config,
-            locale
-          };
-        }
-        // Regular page with locale prefix
-        else {
-          pathMap[`/${locale}${path}`] = { 
-            ...config,
-            locale
-          };
-          
-          // Also add with trailing slash for consistency
-          if (!path.endsWith('/')) {
-            pathMap[`/${locale}${path}/`] = { 
-              ...config,
-              locale
-            };
-          }
-        }
+        // Add locale-prefixed path
+        pathMap[`/${locale}${path}`] = { 
+          ...config,
+          locale
+        };
       });
     });
     

@@ -27,6 +27,10 @@ if [ ! -d "./out" ]; then
   exit 1
 fi
 
+# Inject redirect fix script
+echo -e "${YELLOW}Injecting redirect fix script...${NC}"
+node scripts/inject-redirect-fix.js
+
 # Set up Firebase project
 echo -e "${YELLOW}Setting up Firebase project for staging...${NC}"
 firebase use winepicker-63daa
