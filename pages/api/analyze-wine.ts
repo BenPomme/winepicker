@@ -57,15 +57,7 @@ function validateBase64Image(base64String: string): boolean {
 async function analyzeImageWithOpenAI(imageUrl: string, locale: string = 'en'): Promise<WineInfoInput[]> {
   try {
     console.log("Calling OpenAI Vision API with URL:", imageUrl);
-    // Get language instructions based on locale
-    let languageInstructions = '';
-    if (locale === 'fr') {
-      languageInstructions = 'Respond in French. ';
-    } else if (locale === 'zh') {
-      languageInstructions = 'Respond in Simplified Chinese. ';
-    } else if (locale === 'ar') {
-      languageInstructions = 'Respond in Arabic. ';
-    }
+    // Keep image analysis in English regardless of locale
     
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -75,7 +67,7 @@ async function analyzeImageWithOpenAI(imageUrl: string, locale: string = 'en'): 
           content: [
             {
               type: "text",
-              text: `${languageInstructions}Analyze this image and identify ALL wine bottles visible. For each wine, extract: name, vintage, producer, region, and varietal. Return a JSON array where each object represents a wine with these fields. If there are multiple wines, list all of them. Format: [{wine1}, {wine2}, ...]. Do not include markdown formatting or backticks.`
+              text: `Analyze this image and identify ALL wine bottles visible. For each wine, extract: name, vintage, producer, region, and varietal. Return a JSON array where each object represents a wine with these fields. If there are multiple wines, list all of them. Format: [{wine1}, {wine2}, ...]. Do not include markdown formatting or backticks.`
             },
             {
               type: "image_url",
@@ -136,23 +128,43 @@ async function generateWineSummary(wineInfo: WineInfoInput, locale: string = 'en
   try {
     const wineDescription = `${wineInfo.vintage || ''} ${wineInfo.producer || ''} ${wineInfo.name || ''} ${wineInfo.region || ''} ${wineInfo.varietal || ''}`.trim();
     
-    // Get language instructions based on locale
-    let languageInstructions = '';
+    // Use localized prompts for each language
+    let prompt = '';
+    
     if (locale === 'fr') {
-      languageInstructions = 'Respond in French. ';
-    } else if (locale === 'zh') {
-      languageInstructions = 'Respond in Simplified Chinese. ';
-    } else if (locale === 'ar') {
-      languageInstructions = 'Respond in Arabic. ';
-    }
+      prompt = `Vous êtes un expert en vin. En vous basant uniquement sur ce que vous savez du vin suivant: ${wineDescription}, veuillez fournir:
+1. Un résumé sophistiqué mais concis en un seul paragraphe des caractéristiques probables, des saveurs et de la qualité de ce vin.
+2. Une note estimée sur une échelle de 0 à 100.
 
-    const prompt = `${languageInstructions}You are a wine expert. Based only on what you know about the following wine: ${wineDescription}, please provide:
+Retournez votre réponse au format JSON: {"summary": "votre résumé ici", "score": note_numérique}
+
+S'il y a des informations insuffisantes pour porter un jugement, fournissez une description générale basée sur le cépage, la région ou la réputation du producteur si connu.`;
+    } else if (locale === 'zh') {
+      prompt = `您是一位葡萄酒专家。仅基于您对以下葡萄酒的了解：${wineDescription}，请提供：
+1. 一段简洁而精致的单段落总结，描述这款葡萄酒可能的特点、风味和品质。
+2. 一个0-100分制的估计评分。
+
+以JSON格式返回您的回答：{"summary": "您的总结", "score": 数字评分}
+
+如果没有足够的信息做出判断，请根据葡萄品种、产区或生产商声誉（如已知）提供一个一般性描述。`;
+    } else if (locale === 'ar') {
+      prompt = `أنت خبير نبيذ. بناءً فقط على ما تعرفه عن النبيذ التالي: ${wineDescription}، يرجى تقديم:
+1. ملخص متطور ولكن موجز من فقرة واحدة للخصائص المحتملة والنكهات وجودة هذا النبيذ.
+2. تقدير درجة على مقياس من 0 إلى 100.
+
+أعد إجابتك بتنسيق JSON: {"summary": "ملخصك هنا", "score": الدرجة_الرقمية}
+
+إذا كانت هناك معلومات غير كافية لإصدار حكم، قدم وصفًا عامًا بناءً على التنوع أو المنطقة أو سمعة المنتج إذا كانت معروفة.`;
+    } else {
+      // Default English prompt
+      prompt = `You are a wine expert. Based only on what you know about the following wine: ${wineDescription}, please provide:
 1. A sophisticated yet concise single-paragraph summary of the likely characteristics, flavors, and quality of this wine.
 2. An estimated rating on a scale of 0-100.
 
 Return your response in JSON format: {"summary": "your summary here", "score": numerical_score}
 
 If there's insufficient information to make a judgment, provide a general description based on the varietal, region, or producer reputation if known.`;
+    }
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
