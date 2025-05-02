@@ -44,26 +44,6 @@
           "source": "/",
           "destination": "/en/",
           "type": 302
-        },
-        {
-          "source": "/en",
-          "destination": "/en/",
-          "type": 301
-        },
-        {
-          "source": "/fr",
-          "destination": "/fr/",
-          "type": 301
-        },
-        {
-          "source": "/zh",
-          "destination": "/zh/",
-          "type": 301
-        },
-        {
-          "source": "/ar",
-          "destination": "/ar/",
-          "type": 301
         }
       ]
     },
@@ -111,26 +91,6 @@
           "source": "/",
           "destination": "/en/",
           "type": 302
-        },
-        {
-          "source": "/en",
-          "destination": "/en/",
-          "type": 301
-        },
-        {
-          "source": "/fr",
-          "destination": "/fr/",
-          "type": 301
-        },
-        {
-          "source": "/zh",
-          "destination": "/zh/",
-          "type": 301
-        },
-        {
-          "source": "/ar",
-          "destination": "/ar/",
-          "type": 301
         }
       ]
     }

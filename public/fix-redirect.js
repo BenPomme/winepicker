@@ -3,48 +3,71 @@
  * This script helps resolve issues with i18n static exports
  */
 (function() {
-  // Get current URL
-  const currentUrl = window.location.href;
+  // Track if we've already handled a redirect to prevent loops
+  const redirectAttempted = sessionStorage.getItem('redirectAttempted');
+  
+  // Get current URL and path
   const currentPath = window.location.pathname;
   
-  // Only run on root path
-  if (currentPath === '/') {
-    // Redirect to English version
-    window.location.replace('/en/');
-  }
+  // List of paths to never redirect
+  const staticPaths = ['/_next/', '/static/', '/icons/', '/locales/', '/sw.js', '/manifest.json', 
+                      '.js', '.json', '.css', '.ico', '.png', '.jpg', '.svg', '.webp'];
   
-  // Check for locale in URL
-  const localeMatch = currentPath.match(/^\/(en|fr|zh|ar)\/$/);
-  if (localeMatch) {
-    // This is a valid locale path, no need to redirect
-    console.log('Valid locale path detected:', localeMatch[1]);
-  } else if (!currentPath.includes('/_next/') && !currentPath.includes('/static/') && !currentPath.includes('/icons/') && 
-             !currentPath.includes('/locales/') && !currentPath.includes('.js') && !currentPath.includes('.json') && 
-             !currentPath.includes('.css') && !currentPath.includes('.ico') && !currentPath.includes('.png') && 
-             !currentPath.includes('.jpg') && currentPath !== '/sw.js' && !currentPath.includes('manifest.json')) {
+  // Check if path contains any static paths
+  const isStaticResource = staticPaths.some(path => currentPath.includes(path));
+  
+  // Only redirect if not a static resource and we haven't attempted a redirect yet
+  if (!isStaticResource && !redirectAttempted) {
+    // Set flag to prevent redirect loops
+    sessionStorage.setItem('redirectAttempted', 'true');
     
-    // Detect browser language
-    const browserLang = navigator.language || navigator.userLanguage;
-    let targetLocale = 'en';
-    
-    // Map browser language to app locales
-    if (browserLang.startsWith('fr')) {
-      targetLocale = 'fr';
-    } else if (browserLang.startsWith('zh')) {
-      targetLocale = 'zh';
-    } else if (browserLang.startsWith('ar')) {
-      targetLocale = 'ar';
+    // Root path redirect
+    if (currentPath === '/' || currentPath === '') {
+      console.log('Redirecting root to /en/');
+      window.location.href = '/en/';
+      return;
     }
     
-    // Redirect to localized page
-    if (!currentPath.startsWith(`/${targetLocale}/`)) {
+    // Check for locale in URL
+    const localeMatch = currentPath.match(/^\/(en|fr|zh|ar)(\/|$)/);
+    
+    if (!localeMatch) {
+      // Detect browser language
+      const browserLang = (navigator.language || navigator.userLanguage).toLowerCase();
+      let targetLocale = 'en';
+      
+      // Map browser language to app locales
+      if (browserLang.startsWith('fr')) {
+        targetLocale = 'fr';
+      } else if (browserLang.startsWith('zh')) {
+        targetLocale = 'zh';
+      } else if (browserLang.startsWith('ar')) {
+        targetLocale = 'ar';
+      }
+      
       // Add the locale prefix to the path
       let newPath = `/${targetLocale}${currentPath}`;
-      if (!newPath.endsWith('/')) {
+      if (!newPath.endsWith('/') && !newPath.includes('.')) {
         newPath += '/';
       }
+      
       console.log('Redirecting to localized path:', newPath);
-      window.location.replace(newPath);
+      window.location.href = newPath;
+    } else {
+      // Valid locale path, make sure it ends with trailing slash for consistency
+      if (!currentPath.endsWith('/') && !currentPath.includes('.')) {
+        const newPath = `${currentPath}/`;
+        console.log('Adding trailing slash for consistency:', newPath);
+        window.location.href = newPath;
+      } else {
+        // Valid locale path with trailing slash, clear redirect flag
+        console.log('Valid locale path detected:', localeMatch[1]);
+        sessionStorage.removeItem('redirectAttempted');
+      }
     }
+  } else if (redirectAttempted) {
+    // Reset the redirect flag to allow future redirects
+    console.log('Redirect already attempted, clearing flag');
+    sessionStorage.removeItem('redirectAttempted');
   }
 })();
