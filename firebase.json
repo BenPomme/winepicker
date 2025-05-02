@@ -8,7 +8,7 @@
         "**/.*",
         "**/node_modules/**"
       ],
-      "cleanUrls": false,
+      "cleanUrls": true,
       "trailingSlash": true,
       "headers": [
         {

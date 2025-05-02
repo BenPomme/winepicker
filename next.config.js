@@ -100,6 +100,9 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'build-' + new Date().toISOString().replace(/[\W_]+/g, '');
   },
+  
+  // Ensure static files are properly handled
+  trailingSlash: true,
 }
 
 module.exports = withPWA(nextConfig);

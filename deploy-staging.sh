@@ -31,6 +31,17 @@ fi
 echo -e "${YELLOW}Injecting redirect fix script...${NC}"
 node scripts/inject-redirect-fix.js
 
+# Create locale folders if they don't exist
+echo -e "${YELLOW}Creating locale directories...${NC}"
+mkdir -p out/en out/fr out/zh out/ar
+
+# Copy index files to locale folders
+echo -e "${YELLOW}Copying index files...${NC}"
+cp -f out/index.html out/en/index.html
+cp -f out/index.html out/fr/index.html
+cp -f out/index.html out/zh/index.html
+cp -f out/index.html out/ar/index.html
+
 # Set up Firebase project
 echo -e "${YELLOW}Setting up Firebase project for staging...${NC}"
 firebase use winepicker-63daa
