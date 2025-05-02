@@ -48,10 +48,7 @@ const nextConfig = {
   // Specify asset prefixes for static files
   assetPrefix: process.env.NODE_ENV === 'production' ? undefined : '',
   
-  // Inject scripts to handle redirects
-  experimental: {
-    nextScriptWorkers: true,
-  },
+  // No experimental features needed
   
   // Import i18n configuration from next-i18next.config.js
   // Note: For static export, we use a combination of:
