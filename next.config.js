@@ -50,7 +50,6 @@ const nextConfig = {
   
   // Inject scripts to handle redirects
   experimental: {
-    optimizeCss: true,
     nextScriptWorkers: true,
   },
   
