@@ -973,12 +973,12 @@ function Home() {
 }
 
 export const getStaticProps = async ({ locale = 'en' }: { locale?: string }) => {
-  // For static export, we're overriding the translations on the client side
-  // Generate basic props with English translations as a fallback
+  // For static export, we're using the actual locale instead of always English
   try {
+    // Use the actual locale instead of hardcoding 'en'
     return {
       props: {
-        ...(await serverSideTranslations('en', ['common'])),
+        ...(await serverSideTranslations(locale, ['common'])),
         // Add a fallback flag so the client knows to replace translations
         _clientSideTranslations: true,
       },

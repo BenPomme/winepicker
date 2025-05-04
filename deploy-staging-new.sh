@@ -37,7 +37,7 @@ fi
 
 # Prepare locale directories
 echo -e "${YELLOW}Preparing locale directories...${NC}"
-for locale in en fr zh ar; do
+for locale in en fr zh ar ru; do
   # Ensure locale directories exist
   mkdir -p "out/$locale"
   
@@ -91,7 +91,7 @@ cat > public/fix-redirect.js << 'EOF'
   }
   
   // Check if path already has locale
-  const localeMatch = path.match(/^\/(en|fr|zh|ar)(\/|$)/);
+  const localeMatch = path.match(/^\/(en|fr|zh|ar|ru)(\/|$)/);
   
   // If no locale in path, add one based on browser language
   if (!localeMatch) {
@@ -101,6 +101,7 @@ cat > public/fix-redirect.js << 'EOF'
     if (browserLang.startsWith('fr')) locale = 'fr';
     else if (browserLang.startsWith('zh')) locale = 'zh';
     else if (browserLang.startsWith('ar')) locale = 'ar';
+    else if (browserLang.startsWith('ru')) locale = 'ru';
     
     // Construct the new URL with locale
     let newPath = `/${locale}${path}`;
@@ -115,9 +116,9 @@ cat > public/fix-redirect.js << 'EOF'
 })();
 EOF
 
-# Inject the redirect script into all HTML files
-echo -e "${YELLOW}Injecting redirect script into HTML files...${NC}"
-find out -name "*.html" -exec sed -i '' 's/<\/head>/<script src="\/fix-redirect.js"><\/script><\/head>/g' {} \;
+# Inject the redirect and language scripts into all HTML files
+echo -e "${YELLOW}Injecting redirect and language scripts into HTML files...${NC}"
+find out -name "*.html" -exec sed -i '' 's/<\/head>/<script src="\/fix-redirect.js"><\/script><script src="\/fix-language.js"><\/script><\/head>/g' {} \;
 
 # Update Firebase configuration
 echo -e "${YELLOW}Creating Firebase hosting configuration...${NC}"
@@ -164,7 +165,25 @@ cat > firebase.staging.json << 'EOF'
     ],
     "headers": [
       {
-        "source": "**/*.@(js|css|jpg|jpeg|gif|png|svg|webp)",
+        "source": "**/*.@(css|jpg|jpeg|gif|png|svg|webp)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "/fix-*.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/_next/static/**/*.js",
         "headers": [
           {
             "key": "Cache-Control",

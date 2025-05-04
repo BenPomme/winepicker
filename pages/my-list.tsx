@@ -558,7 +558,7 @@ export const getStaticProps = async ({ locale = 'en' }: { locale?: string }) => 
   try {
     return {
       props: {
-        ...(await serverSideTranslations('en', ['common'])),
+        ...(await serverSideTranslations(locale, ['common'])),
         // Add a fallback flag so the client knows to replace translations
         _clientSideTranslations: true,
       },

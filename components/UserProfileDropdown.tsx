@@ -44,9 +44,18 @@ export default function UserProfileDropdown() {
   };
 
   // If no user, don't render anything
-  if (!currentUser || !userProfile) {
+  if (!currentUser) {
     return null;
   }
+  
+  // If we have currentUser but no userProfile, create a minimal profile
+  // This ensures we at least have sign-out functionality even if profile fetch fails
+  const displayProfile = userProfile || {
+    displayName: currentUser.displayName || 'User',
+    email: currentUser.email,
+    photoURL: currentUser.photoURL,
+    uid: currentUser.uid
+  };
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -54,19 +63,19 @@ export default function UserProfileDropdown() {
         className="flex items-center space-x-2 rounded-full hover:opacity-80 transition-opacity focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
       >
-        {userProfile.photoURL ? (
+        {displayProfile.photoURL ? (
           <img
-            src={userProfile.photoURL}
-            alt={userProfile.displayName || 'User'}
+            src={displayProfile.photoURL}
+            alt={displayProfile.displayName || 'User'}
             className="w-8 h-8 rounded-full object-cover border border-border"
           />
         ) : (
           <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center">
-            {userProfile.displayName?.charAt(0) || userProfile.email?.charAt(0) || 'U'}
+            {displayProfile.displayName?.charAt(0) || displayProfile.email?.charAt(0) || 'U'}
           </div>
         )}
         <span className="font-medium text-text-primary hidden md:block">
-          {userProfile.displayName || t('auth.user', 'User')}
+          {displayProfile.displayName || t('auth.user', 'User')}
         </span>
         <svg
           className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${
@@ -83,8 +92,8 @@ export default function UserProfileDropdown() {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-56 rounded-xl shadow-lg bg-surface border border-border z-50 animate-fade-in">
           <div className="p-3 border-b border-border">
-            <p className="text-text-primary font-medium">{userProfile.displayName}</p>
-            <p className="text-text-secondary text-sm truncate">{userProfile.email}</p>
+            <p className="text-text-primary font-medium">{displayProfile.displayName}</p>
+            <p className="text-text-secondary text-sm truncate">{displayProfile.email}</p>
           </div>
           <div className="p-2">
             <Link

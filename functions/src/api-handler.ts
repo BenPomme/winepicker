@@ -376,13 +376,15 @@ async function handleAnalyzeWine(req: functions.https.Request, res: functions.Re
 
     console.log(`[${requestId}] [${jobId}] Analysis completed successfully`);
     
-    // Return the job ID and status
+    // Return the job ID, status, and locale
     return res.status(200).json({ 
       jobId, 
-      status: 'completed', 
+      status: 'completed',
+      locale: locale || 'en', // Include the locale in the response 
       data: { 
         wines,
-        imageUrl 
+        imageUrl,
+        locale: locale || 'en' // Include locale in data as well for compatibility
       } 
     });
   } catch (error: any) {
@@ -432,13 +434,15 @@ async function handleGetAnalysisResult(req: functions.https.Request, res: functi
             if (detailsDoc.exists) {
               const detailsData = detailsDoc.data();
               
-              // Combine the data from both documents
+              // Combine the data from both documents and include locale
               return res.status(200).json({
                 status: jobData.status,
+                locale: jobData.locale || 'en', // Include the locale in the response
                 data: {
                   wines: detailsData?.wines || [],
                   imageUrl: jobData.resultSummary?.imageUrl || jobData.imageUrl,
-                  completedAt: jobData.completedAt
+                  completedAt: jobData.completedAt,
+                  locale: jobData.locale || 'en' // Include locale in data as well for compatibility
                 }
               });
             }
@@ -451,10 +455,12 @@ async function handleGetAnalysisResult(req: functions.https.Request, res: functi
           if (jobData.resultSummary) {
             return res.status(200).json({
               status: jobData.status,
+              locale: jobData.locale || 'en', // Include the locale in the response
               data: {
                 wines: jobData.resultSummary.wineNames.map((name: string) => ({ name })),
                 imageUrl: jobData.resultSummary.imageUrl,
-                message: 'Limited data available. Full details could not be retrieved.'
+                message: 'Limited data available. Full details could not be retrieved.',
+                locale: jobData.locale || 'en' // Include locale in data as well for compatibility
               }
             });
           }
@@ -462,17 +468,25 @@ async function handleGetAnalysisResult(req: functions.https.Request, res: functi
           // Fall back to result or resultMinimal if they exist
           return res.status(200).json({
             status: jobData.status,
-            data: jobData.result || jobData.resultMinimal || {
-              wines: [],
-              message: 'Wine data was processed but details are not available.'
+            locale: jobData.locale || 'en', // Include the locale in the response
+            data: {
+              ...(jobData.result || jobData.resultMinimal || {
+                wines: [],
+                message: 'Wine data was processed but details are not available.'
+              }),
+              locale: jobData.locale || 'en' // Include locale in data as well for compatibility
             }
           });
         }
         
-        // For jobs that aren't completed, return the status
+        // For jobs that aren't completed, return the status and include locale
         return res.status(200).json({
           status: jobData?.status || 'unknown',
-          data: jobData?.result || null
+          locale: jobData?.locale || 'en', // Include the locale in the response
+          data: {
+            ...(jobData?.result || null),
+            locale: jobData?.locale || 'en' // Include locale in data as well for compatibility
+          }
         });
       } catch (error) {
         console.error('Error retrieving from Firestore:', error);
@@ -483,8 +497,11 @@ async function handleGetAnalysisResult(req: functions.https.Request, res: functi
     // If Firestore not available or error occurred, return a not_found status
     return res.status(404).json({ 
       status: 'not_found', 
-      data: null,
-      message: "Firestore not available for job tracking"
+      locale: 'en', // Default to English if we can't retrieve the locale
+      data: {
+        locale: 'en', // Include locale in data as well for compatibility
+        message: "Firestore not available for job tracking"
+      }
     });
   } catch (error: any) {
     console.error('Error retrieving analysis result:', error);

@@ -54,13 +54,13 @@ const nextConfig = {
   // Note: For static export, we use a combination of:
   // 1. Sub-path routing (/en/page, /fr/page, etc.)
   // 2. The trailingSlash option to ensure proper static file loading
-  // 3. This MUST be set to true for i18n static exports
-  trailingSlash: true,
+  // 3. This MUST be set to false for static exports with firebase
+  trailingSlash: false,
   
   // Simplified export logic for handling i18n
   exportPathMap: async function (defaultPathMap, { dev, dir, outDir, distDir, buildId }) {
     const pathMap = {};
-    const locales = ['en', 'fr', 'zh', 'ar'];
+    const locales = ['en', 'fr', 'zh', 'ar', 'ru'];
     
     // Create redirects from root to default locale (en)
     pathMap['/'] = { page: '/' };
@@ -102,7 +102,7 @@ const nextConfig = {
   },
   
   // Ensure static files are properly handled
-  trailingSlash: true,
+  trailingSlash: false,
 }
 
 module.exports = withPWA(nextConfig);

@@ -1,0 +1,138 @@
+{
+  "appName": "PickMyWine",
+  "upload": {
+    "title": "Загрузите фотографию бутылок или винного меню",
+    "dropzone": "Перетащите изображение сюда или нажмите, чтобы выбрать файл",
+    "button": "Загрузить",
+    "processing": "Обработка вашего изображения..."
+  },
+  "processing": {
+    "uploading": "Загрузка",
+    "analyzing": "Анализ",
+    "generating": "Генерация",
+    "formatting": "Форматирование",
+    "calculating": "Расчет...",
+    "timeRemainingSec": "{{seconds}} секунд",
+    "timeRemainingMin": "{{minutes}} минут",
+    "elapsed": "Прошло",
+    "remaining": "Осталось",
+    "error": "Ошибка обработки",
+    "retry": "Повторить",
+    "cancel": "Отмена"
+  },
+  "wineDetails": {
+    "name": "Название",
+    "producer": "Производитель",
+    "vintage": "Винтаж",
+    "region": "Регион",
+    "varietal": "Сорт винограда",
+    "score": "Оценка",
+    "summary": "Описание"
+  },
+  "preferences": {
+    "title": "Настройки",
+    "noBSMode": "Режим без BS",
+    "noBSModeDescription": "Получайте честные оценки вин (шкала 0-100) и прямолинейное описание",
+    "language": "Язык"
+  },
+  "results": {
+    "title": "Результаты анализа",
+    "noWine": "На изображении не обнаружено вино",
+    "error": "Ошибка при анализе вина",
+    "expertSummary": "Мнение эксперта",
+    "honestAssessment": "Честная оценка"
+  },
+  "navigation": {
+    "home": "Главная",
+    "about": "О нас",
+    "contact": "Контакты"
+  },
+  "myList": {
+    "pageTitle": "Мой список вин",
+    "description": "Ваша личная коллекция вин",
+    "subtitle": "Ваша личная коллекция любимых вин",
+    "subtitleLoggedIn": "Ваша личная коллекция синхронизирована с вашим аккаунтом",
+    "viewList": "Мой список вин",
+    "add": "Добавить в мой список",
+    "inList": "В моем списке",
+    "remove": "Удалить",
+    "clearList": "Очистить список",
+    "backHome": "Вернуться к поиску",
+    "findWines": "Найти вина",
+    "empty": "Ваш список вин пуст",
+    "emptyDescription": "Анализируйте изображения винных бутылок и добавляйте вина в свой личный список.",
+    "loading": "Загрузка вашего списка вин...",
+    "confirmClear": "Вы уверены, что хотите очистить весь список вин?",
+    "rateWine": "Оценить это вино",
+    "yourRating": "Ваша оценка",
+    "fetchPrice": "Узнать цену",
+    "fetchingPrice": "Узнаем...",
+    "estimatedPrice": "Оценка цены",
+    "priceEstimate": "Оценка цены",
+    "priceEstimateLoading": "Поиск текущих цен...",
+    "priceEstimateSuccess": "Оценка цены обновлена",
+    "priceEstimateError": "Не удалось получить оценку цены",
+    "signInToRate": "Войдите, чтобы оценивать вина",
+    "signInToSave": "Войдите, чтобы сохранять вина",
+    "signInToSync": "Войдите для синхронизации",
+    "ratingAdded": "Ваша оценка сохранена",
+    "addNote": "Добавить заметку",
+    "editNote": "Редактировать заметку",
+    "saveNote": "Сохранить заметку",
+    "cancelNote": "Отмена",
+    "noteUpdated": "Заметка обновлена"
+  },
+  
+  "auth": {
+    "signIn": "Войти",
+    "signOut": "Выйти",
+    "signInWithGoogle": "Войти через Google",
+    "signInWithEmail": "Войти через Email",
+    "signUp": "Зарегистрироваться",
+    "forgotPassword": "Забыли пароль?",
+    "resetPassword": "Сбросить пароль",
+    "createAccount": "Создать аккаунт",
+    "email": "Email",
+    "password": "Пароль",
+    "displayName": "Имя пользователя",
+    "user": "Пользователь",
+    "accountCreated": "Аккаунт успешно создан!",
+    "resetPasswordSent": "Письмо для сброса пароля отправлено!",
+    "passwordRequired": "Требуется пароль",
+    "emailRequired": "Требуется email",
+    "displayNameRequired": "Требуется имя пользователя",
+    "invalidEmail": "Неверный адрес email",
+    "passwordTooShort": "Пароль должен быть не менее 6 символов",
+    "passwordsMustMatch": "Пароли должны совпадать",
+    "signInSuccess": "Вход выполнен успешно!",
+    "signOutSuccess": "Выход выполнен успешно!",
+    "signInError": "Ошибка входа",
+    "signUpError": "Ошибка создания аккаунта",
+    "resetPasswordError": "Ошибка отправки письма для сброса",
+    "alreadyHaveAccount": "Уже есть аккаунт? Войдите"
+  },
+  
+  "profile": {
+    "settings": "Настройки профиля",
+    "displayName": "Имя пользователя",
+    "country": "Страна",
+    "forPricing": "для определения цен на вино",
+    "currency": "Валюта",
+    "currencyNote": "Валюта устанавливается автоматически в зависимости от вашей страны",
+    "language": "Язык",
+    "saveSuccess": "Профиль успешно обновлен!",
+    "errorSaving": "Ошибка сохранения профиля. Пожалуйста, попробуйте снова."
+  },
+  
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "edit": "Редактировать",
+    "delete": "Удалить",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "retry": "Повторить",
+    "close": "Закрыть"
+  }
+}

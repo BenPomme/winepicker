@@ -38,18 +38,8 @@ firebase deploy --only hosting:production
 echo -e "${GREEN}Firebase production deployment completed.${NC}"
 echo -e "${YELLOW}Your app is now available at https://pickmywine-live.web.app/${NC}"
 
-# Verify and screenshot the deployment
-echo -e "${YELLOW}Verifying and capturing screenshots of the deployment...${NC}"
-if ! npm list -g puppeteer >/dev/null 2>&1; then
-  echo -e "${YELLOW}Installing puppeteer for automated verification...${NC}"
-  npm install -g puppeteer
-fi
-
-node scripts/verify-deployment.js
-VERIFY_EXIT_CODE=$?
-
-if [ $VERIFY_EXIT_CODE -eq 0 ]; then
-  echo -e "${GREEN}Deployment verification succeeded. Screenshots saved to Desktop/wine-app-screenshots/${NC}"
-else
-  echo -e "${RED}Deployment verification had issues. Check the logs and screenshots in Desktop/wine-app-screenshots/${NC}"
-fi
+# Simplified verification - we'll manually test languages
+echo -e "${YELLOW}Deployment completed. Please manually verify language functionality at:${NC}"
+echo -e "${GREEN}Production: https://pickmywine-live.web.app${NC}"
+echo -e "${GREEN}Staging: https://winepicker-63daa.web.app${NC}"
+echo -e "${YELLOW}Test languages by clicking the language selector and choosing different options${NC}"

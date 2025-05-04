@@ -11,6 +11,7 @@ export default function LanguageSelector() {
   const [isOpen, setIsOpen] = useState(false)
   const { pathname, asPath, query, locale } = router
   
+  // Ensure we have the current language, defaulting to English if not found
   const currentLanguage = languages.find(lang => lang.code === locale) || languages[0]
   
   // Set document direction based on language
@@ -36,7 +37,7 @@ export default function LanguageSelector() {
       let pathWithoutLang = currentPath
       
       // Check if there's a language code at the start of the path
-      const langRegex = /^\/(en|fr|zh|ar)\//
+      const langRegex = /^\/(en|fr|zh|ar|ru)\//
       if (langRegex.test(currentPath)) {
         pathWithoutLang = currentPath.replace(langRegex, '/')
       }

@@ -62,3 +62,15 @@ test-*.js
 
 # test uploads
 public/uploads/
+**/.claude/settings.local.json
+
+# logs
+logs/
+logs_backup/
+*.log
+.json-audit.json
+
+# temporary files
+test-screenshot.png
+manifest.json.bak
+*.bak

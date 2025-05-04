@@ -500,12 +500,17 @@ Format: [{wine1}, {wine2}, ...]. Do not include any markdown formatting or backt
     console.log(`[${requestId}] [${jobId}] Analysis completed successfully`);
     
     // Debug the response data before returning
+    // Get locale for response
+    const locale = data?.locale || 'en';
+    
     const responseData = {
       jobId, 
       status: 'completed', 
+      locale: locale, // Include the locale in the response 
       data: { 
         wines: processedWines,
-        imageUrl 
+        imageUrl,
+        locale: locale // Include locale in data as well for compatibility
       }
     };
     
