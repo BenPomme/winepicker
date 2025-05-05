@@ -2,5 +2,13 @@
   "projects": {
     "staging": "winepicker-63daa",
     "production": "pickmywine-live"
+  },
+  "targets": {
+    "winepicker-63daa": {
+      "hosting": {
+        "staging": ["winepicker-63daa"],
+        "production": ["pickmywine-live"]
+      }
+    }
   }
 } 
