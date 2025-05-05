@@ -519,7 +519,18 @@ export default async function handler(
           const imageUrl = await fetchWineImage(wineInfo.wineName, serperApiKey);
           console.log(`[${requestId}] Fetched Image URL for ${wineInfo.wineName}: ${imageUrl || 'None'}`);
 
-          // Return comprehensive wine data
+          // Prepare additional reviews with asynchronous rating extraction
+          const additionalReviews = await Promise.all(
+            reviews.map(async (r) => {
+              const { score, source } = await extractRatingFromReviews([r]);
+              return {
+                source: source || 'Review',
+                rating: score || 0,
+                review: r
+              };
+            })
+          );
+          // Return full wine data with properly awaited additional reviews
           return {
             name: wineInfo.wineName,
             vintage: wineInfo.vintage || undefined,
@@ -530,17 +541,7 @@ export default async function handler(
             score: ratingInfo.score,
             ratingSource: ratingInfo.source,
             summary: aiSummary || '',
-            additionalReviews: reviews.map(r => {
-              const reviewScore = typeof r === 'string' 
-                ? extractRatingFromReviews([r]).score || 0
-                : r.rating || 0;
-                
-              return {
-                source: typeof r === 'string' ? 'Review' : r.source || 'Review',
-                rating: reviewScore,
-                review: typeof r === 'string' ? r : r.snippet || r.text || ''
-              };
-            })
+            additionalReviews
           };
         } catch (error) {
           console.error(`[${requestId}] Error processing wine ${wineInfo.wineName}:`, error);

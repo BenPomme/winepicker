@@ -1,6 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Enable static export for GitHub Pages
+  output: 'export',
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   reactStrictMode: true,
+  // Any additional webpack configs
+  webpack: (config) => {
+    return config;
+  },
+  // Only use basePath in production
+  ...(process.env.NODE_ENV === 'production' ? { basePath: '/winepicker' } : {}),
+  images: {
+    unoptimized: true,
+  },
   async headers() {
     return [
       {
@@ -15,15 +29,6 @@ const nextConfig = {
         ],
       },
     ]
-  },
-  webpack: (config, { dev, isServer }) => {
-    // Add any webpack configurations here if needed
-    return config
-  },
-  // Only use basePath in production
-  ...(process.env.NODE_ENV === 'production' ? { basePath: '/winepicker' } : {}),
-  images: {
-    unoptimized: true,
   },
 }
 

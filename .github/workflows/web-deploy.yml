@@ -11,27 +11,24 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          flutter-version: '3.19.0'
-          channel: 'stable'
-      
+          node-version: '18'
+          cache: 'npm'
+
       - name: Install dependencies
-        run: flutter pub get
-        
-      - name: Create .env file
         run: |
-          echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" > .env
-          echo "SERPER_API_KEY=${{ secrets.SERPER_API_KEY }}" >> .env
-        
-      - name: Build web
+          cd wine-picker-next
+          npm ci
+
+      - name: Build and export Next.js app
         run: |
-          flutter config --enable-web
-          flutter build web --release --base-href /winepicker/
-        
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/web 
+          cd wine-picker-next
+          npm run export
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase (staging)
+        run: firebase deploy --only hosting:staging --token ${{ secrets.FIREBASE_TOKEN }} 
