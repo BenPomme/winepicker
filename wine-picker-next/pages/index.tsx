@@ -1,10 +1,13 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import ImageUploader from '../components/ImageUploader';
 import WineCard from '../components/WineCard';
 import { Wine, UploadState } from '../utils/types';
 
 export default function Home() {
+  const { t } = useTranslation('common');
   const [uploadState, setUploadState] = useState<UploadState>({
     isLoading: false,
     error: null,
@@ -127,10 +130,8 @@ export default function Home() {
       <main className="min-h-screen bg-gray-100 py-8">
         <div className="container mx-auto px-4">
           <header className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Pick My Wine</h1>
-            <p className="text-xl text-gray-600">
-              Take a photo of a wine bottle or menu to get instant ratings and reviews
-            </p>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">{t('title')}</h1>
+            <p className="text-xl text-gray-600">{t('subtitle')}</p>
           </header>
           
           <div className="max-w-4xl mx-auto">
@@ -168,3 +169,10 @@ export default function Home() {
     </>
   );
 }
+
+// Fetch translations at build time
+export const getStaticProps = async ({ locale }) => ({
+  props: {
+    ...(await serverSideTranslations(locale, ['common'])),
+  },
+});

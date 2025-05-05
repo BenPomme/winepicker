@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
+const { i18n } = require('./next-i18next.config');
 const nextConfig = {
+  output: 'export',
+  i18n,
   // Enable static export for GitHub Pages
   output: 'export',
   typescript: {
@@ -10,8 +13,6 @@ const nextConfig = {
   webpack: (config) => {
     return config;
   },
-  // Only use basePath in production
-  ...(process.env.NODE_ENV === 'production' ? { basePath: '/winepicker' } : {}),
   images: {
     unoptimized: true,
   },
