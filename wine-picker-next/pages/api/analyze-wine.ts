@@ -390,6 +390,21 @@ function validateBase64Image(base64String: string): boolean {
   return true;
 }
 
+interface WineReview {
+  rating?: number;
+  source?: string;
+  snippet?: string;
+  text?: string;
+}
+
+interface WineInfo {
+  wineName: string;
+  vintage?: string;
+  producer?: string;
+  region?: string;
+  varietal?: string;
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -490,7 +505,7 @@ export default async function handler(
     console.log(`[${requestId}] Identified ${identifiedWines.length} wine(s)`);
 
     // Process each wine in parallel with a timeout
-    const processWineWithTimeout = async (wineInfo: any, timeoutMs = 25000) => {
+    const processWineWithTimeout = async (wineInfo: WineInfo, timeoutMs = 25000) => {
       const timeoutPromise = new Promise<any>((_, reject) => {
         setTimeout(() => reject(new Error('Processing timed out')), timeoutMs);
       });
@@ -530,9 +545,9 @@ export default async function handler(
             score: ratingInfo.score,
             ratingSource: ratingInfo.source,
             summary: aiSummary || '',
-            additionalReviews: reviews.map(r => {
+            additionalReviews: await Promise.all(reviews.map(async (r: string | WineReview) => {
               const reviewScore = typeof r === 'string' 
-                ? extractRatingFromReviews([r]).score || 0
+                ? (await extractRatingFromReviews([r])).score || 0
                 : r.rating || 0;
                 
               return {
@@ -540,7 +555,7 @@ export default async function handler(
                 rating: reviewScore,
                 review: typeof r === 'string' ? r : r.snippet || r.text || ''
               };
-            })
+            }))
           };
         } catch (error) {
           console.error(`[${requestId}] Error processing wine ${wineInfo.wineName}:`, error);
@@ -570,7 +585,7 @@ export default async function handler(
     };
     
     const processedWines = await Promise.all(
-      identifiedWines.map(wineInfo => processWineWithTimeout(wineInfo))
+      identifiedWines.map((wineInfo: WineInfo) => processWineWithTimeout(wineInfo))
     );
 
     console.log(`[${requestId}] Analysis complete. Sending response.`);

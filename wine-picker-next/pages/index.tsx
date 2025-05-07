@@ -60,7 +60,7 @@ export default function Home() {
               review: wineData.summary || ''
             },
             additionalReviews: Array.isArray(wineData.additionalReviews) 
-              ? wineData.additionalReviews.map((review: any) => {
+              ? wineData.additionalReviews.map((review: string | { review: string; rating?: number; source?: string }) => {
                   if (typeof review === 'string') {
                     return { review: review };
                   }
@@ -91,7 +91,7 @@ export default function Home() {
             review: data.summary || ''
           },
           additionalReviews: Array.isArray(data.additionalReviews) 
-            ? data.additionalReviews.map(review => {
+            ? data.additionalReviews.map((review: string | { review: string; rating?: number; source?: string }) => {
                 if (typeof review === 'string') {
                   return { review: review };
                 }
