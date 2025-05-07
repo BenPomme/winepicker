@@ -1,21 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Static export for GitHub Pages - this is crucial
-  output: 'export',
+  // Enable i18n
+  i18n: {
+    locales: ['en', 'ru'],
+    defaultLocale: 'en',
+  },
   // Disable image optimization for static export
   images: {
     unoptimized: true,
   },
-  // Use correct basePath for GitHub Pages
-  basePath: process.env.NODE_ENV === 'production' ? '/mywine' : '',
-  // Use trailing slashes for better compatibility with static hosting
-  trailingSlash: true,
-  // Security headers - will only apply in development since static export
+  // Security headers
   async headers() {
-    if (process.env.NODE_ENV !== 'development') {
-      return [];
-    }
     return [
       {
         source: '/:path*',

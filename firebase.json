@@ -2,7 +2,7 @@
   "hosting": [
     {
       "target": "staging",
-      "public": "build/web",
+      "public": "wine-picker-next/out",
       "ignore": [
         "firebase.json",
         "**/.*",
@@ -15,7 +15,7 @@
     },
     {
       "target": "production",
-      "public": "build/web",
+      "public": "wine-picker-next/out",
       "ignore": [
         "firebase.json",
         "**/.*",
